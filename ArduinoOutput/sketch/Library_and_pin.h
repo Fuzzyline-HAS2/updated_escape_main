@@ -1,4 +1,4 @@
-#line 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\Library_and_pin.h"
+#line 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\Library_and_pin.h"
 #ifndef _LIBRARY_AND_PIN_
 #define _LIBRARY_AND_PIN_
 
