@@ -6,8 +6,6 @@
         "xlocmon": "cpp",
         "xlocnum": "cpp",
         "xtr1common": "cpp",
-        "map": "cpp",
-        "serial_communication": "cpp",
-        "stepper_motor": "cpp"
+        "map": "cpp"
     }
 }

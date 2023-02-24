@@ -20,6 +20,7 @@ void WaitFunc(){
 void SettingFunc(void)
 {
     Serial.println("SETTING");
+    digitalWrite(RELAY_PIN, HIGH);
     AllNeoOn(WHITE);
     EscapeClose();
     ptrCurrentMode = WaitFunc;
@@ -38,6 +39,7 @@ void ActivateFunc(void){
 }
 void ReadyFunc(void){
     Serial.println("READY");
+    digitalWrite(RELAY_PIN, HIGH);
     AllNeoOn(RED);
     EscapeClose();
     ptrCurrentMode = WaitFunc;

@@ -19,10 +19,12 @@ void setup() {
     Mp3_Setup();
     StepMotorInit();
     pinMode(RELAY_PIN, OUTPUT);
-    //has2wifi.Setup("KT_GiGA_6C64","ed46zx1198");
-    has2wifi.Setup();
+    digitalWrite(RELAY_PIN, HIGH);
+    // has2wifi.Setup("KT_GiGA_6C64","ed46zx1198");
+    // has2wifi.Setup();
+    has2wifi.Setup("badland");
     DataChanged();
-    toSubSerial.println("R");
+    toSubSerial.println("R"); 
     toSubSerial.println("R");
     toSubSerial.println("R");
 }
