@@ -1,4 +1,4 @@
-# 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\escape_main.ino"
+# 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\escape_main.ino"
  ;/**
 
  * @file Done_Escape_Main_code.ino
@@ -18,19 +18,20 @@
  *
 
  */
-# 12 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\escape_main.ino"
-# 13 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\escape_main.ino" 2
+# 12 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\escape_main.ino"
+# 13 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\escape_main.ino" 2
 
 void setup() {
     Serial.begin(115200);
     toSubSerial.begin(115200, 0x800001c, 18, 23);
+    has2wifi.Setup("badland");
     NeopixelInit();
     TimerInit();
     Mp3_Setup();
     StepMotorInit();
     pinMode(14, 0x03);
-    //has2wifi.Setup("KT_GiGA_6C64","ed46zx1198");
-    has2wifi.Setup();
+    // has2wifi.Setup("KT_GiGA_6C64","ed46zx1198");
+    // has2wifi.Setup();
     DataChanged();
     toSubSerial.println("R");
     toSubSerial.println("R");
@@ -40,7 +41,7 @@ void loop() {
     WifiTimer.run();
     GameTimer.run();
 }
-# 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\Game_system.ino"
+# 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\Game_system.ino"
 void TagCount(){
     tagCnt = 0;
     for(int i = 0; i < 3; i++){
@@ -71,7 +72,7 @@ void TagCount(){
     for(int i = 0; i < 3; i++)
         tagState[i] = false;
 }
-# 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\Wifi.ino"
+# 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\Wifi.ino"
 void DataChanged()
 {
   static StaticJsonDocument<500> cur; //저장되어 있는 cur과 읽어온 my 값과 비교후 실행
@@ -116,7 +117,7 @@ void ReadyFunc(void){
     EscapeClose();
     ptrCurrentMode = WaitFunc;
 }
-# 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\dfplayer.ino"
+# 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\dfplayer.ino"
 //****************************************mp3_setup()****************************************************************
 void Mp3_Setup(){
   //Serial.println();
@@ -138,7 +139,7 @@ void Mp3_Setup(){
   myDFPlayer.outputDevice(2);
 
 }//void MP3_SETUP
-# 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\neopixel.ino"
+# 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\neopixel.ino"
 void NeopixelInit()
 {
   for (int i = 0; i < NeopixelNum; ++i)
@@ -172,7 +173,7 @@ void LineNeoOn(int changeColr, int baseColor, int cnt){
     pixels[LINE].setPixelColor(i,pixels[LINE].Color(color[changeColr][0],color[changeColr][1],color[changeColr][2]));
   pixels[LINE].show();
 }
-# 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\serial_Communication.ino"
+# 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\serial_Communication.ino"
 void CommnunicationBeetle(){
   Serial.println("READ");
   if(toSubSerial.available() > 0){
@@ -227,7 +228,7 @@ bool PlayerDetector(String playerNum)
   }
 
 }
-# 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\stepper_Motor.ino"
+# 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\stepper_Motor.ino"
 void StepMotorInit(){
     pinMode(13, 0x03);
     pinMode(15, 0x03);
@@ -259,7 +260,7 @@ void EscapeOpen(){
     }
     Serial.println("Open Finish");
 }
-# 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\timer.ino"
+# 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\timer.ino"
 void TimerInit(){
     wifiTimerId = WifiTimer.setInterval(2000,WifiIntervalFunc);
     gameTimerId = GameTimer.setInterval(500,GameTimerFunc);

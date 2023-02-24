@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#line 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\escape_main.ino"
+#line 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\escape_main.ino"
  ;/**
  * @file Done_Escape_Main_code.ino
  * @author 김병준 (you@domain.com)
@@ -13,59 +13,60 @@
 
 #include "escape_main.h""
 
-#line 14 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\escape_main.ino"
+#line 14 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\escape_main.ino"
 void setup();
-#line 29 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\escape_main.ino"
+#line 30 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\escape_main.ino"
 void loop();
-#line 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\Game_system.ino"
+#line 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\Game_system.ino"
 void TagCount();
-#line 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\Wifi.ino"
+#line 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\Wifi.ino"
 void DataChanged();
-#line 17 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\Wifi.ino"
+#line 17 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\Wifi.ino"
 void WaitFunc();
-#line 20 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\Wifi.ino"
+#line 20 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\Wifi.ino"
 void SettingFunc(void);
-#line 29 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\Wifi.ino"
+#line 29 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\Wifi.ino"
 void ActivateFunc(void);
-#line 39 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\Wifi.ino"
+#line 39 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\Wifi.ino"
 void ReadyFunc(void);
-#line 2 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\dfplayer.ino"
+#line 2 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\dfplayer.ino"
 void Mp3_Setup();
-#line 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\neopixel.ino"
+#line 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\neopixel.ino"
 void NeopixelInit();
-#line 13 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\neopixel.ino"
+#line 13 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\neopixel.ino"
 void NeoBlink(int neo, int neoColor, int cnt, int blinkTime);
-#line 22 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\neopixel.ino"
+#line 22 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\neopixel.ino"
 void AllNeoOn(int neoColor);
-#line 27 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\neopixel.ino"
+#line 27 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\neopixel.ino"
 void LineNeoOn(int changeColr, int baseColor, int cnt);
-#line 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\serial_Communication.ino"
+#line 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\serial_Communication.ino"
 void CommnunicationBeetle();
-#line 40 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\serial_Communication.ino"
+#line 40 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\serial_Communication.ino"
 bool PlayerDetector(String playerNum);
-#line 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\stepper_Motor.ino"
+#line 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\stepper_Motor.ino"
 void StepMotorInit();
-#line 6 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\stepper_Motor.ino"
+#line 6 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\stepper_Motor.ino"
 void EscapeClose();
-#line 19 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\stepper_Motor.ino"
+#line 19 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\stepper_Motor.ino"
 void EscapeOpen();
-#line 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\timer.ino"
+#line 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\timer.ino"
 void TimerInit();
-#line 7 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\timer.ino"
+#line 7 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\timer.ino"
 void WifiIntervalFunc();
-#line 11 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\timer.ino"
+#line 11 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\timer.ino"
 void GameTimerFunc();
-#line 14 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\escape_main.ino"
+#line 14 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\escape_main.ino"
 void setup() {
     Serial.begin(115200);
     toSubSerial.begin(115200, SERIAL_8N1, HWSERIAL_RX, HWSERIAL_TX);
+    has2wifi.Setup("badland");
     NeopixelInit();
     TimerInit();
     Mp3_Setup();
     StepMotorInit();
     pinMode(RELAY_PIN, OUTPUT);
-    //has2wifi.Setup("KT_GiGA_6C64","ed46zx1198");
-    has2wifi.Setup();
+    // has2wifi.Setup("KT_GiGA_6C64","ed46zx1198");
+    // has2wifi.Setup();
     DataChanged();
     toSubSerial.println("R");
     toSubSerial.println("R");
@@ -76,7 +77,7 @@ void loop() {
     GameTimer.run();
 }
 
-#line 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\Game_system.ino"
+#line 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\Game_system.ino"
 void TagCount(){
     tagCnt = 0;
     for(int  i = 0; i < 3; i++){
@@ -107,7 +108,7 @@ void TagCount(){
     for(int  i = 0; i < 3; i++)
         tagState[i] = false;
 }
-#line 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\Wifi.ino"
+#line 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\Wifi.ino"
 void DataChanged()
 {
   static StaticJsonDocument<500> cur;   //저장되어 있는 cur과 읽어온 my 값과 비교후 실행
@@ -152,7 +153,7 @@ void ReadyFunc(void){
     EscapeClose();
     ptrCurrentMode = WaitFunc;
 }
-#line 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\dfplayer.ino"
+#line 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\dfplayer.ino"
 //****************************************mp3_setup()****************************************************************
 void Mp3_Setup(){
   //Serial.println();
@@ -175,7 +176,7 @@ void Mp3_Setup(){
 
 }//void MP3_SETUP
    
-#line 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\neopixel.ino"
+#line 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\neopixel.ino"
 void NeopixelInit()
 {
   for (int i = 0; i < NeopixelNum; ++i)
@@ -209,7 +210,7 @@ void LineNeoOn(int changeColr, int baseColor, int cnt){
     pixels[LINE].setPixelColor(i,pixels[LINE].Color(color[changeColr][0],color[changeColr][1],color[changeColr][2]));
   pixels[LINE].show();
 }
-#line 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\serial_Communication.ino"
+#line 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\serial_Communication.ino"
 void CommnunicationBeetle(){
   Serial.println("READ");
   if(toSubSerial.available() > 0){
@@ -264,7 +265,7 @@ bool PlayerDetector(String playerNum)
   }
   
 }
-#line 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\stepper_Motor.ino"
+#line 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\stepper_Motor.ino"
 void StepMotorInit(){
     pinMode(STEP_PIN, OUTPUT);  
     pinMode(DIR_PIN, OUTPUT);
@@ -297,7 +298,7 @@ void EscapeOpen(){
     Serial.println("Open Finish");
 }
 
-#line 1 "c:\\Users\\HAS1\\Desktop\\BBangJun\\Final_Code\\escape_main\\timer.ino"
+#line 1 "c:\\Users\\teamh\\OneDrive\\바탕 화면\\BBangJunCode\\Final_Code\\escape_main\\timer.ino"
 void TimerInit(){
     wifiTimerId = WifiTimer.setInterval(2000,WifiIntervalFunc);
     gameTimerId = GameTimer.setInterval(500,GameTimerFunc);
