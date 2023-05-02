@@ -3,7 +3,7 @@
 
 #include "Library_and_pin.h"
 //****************************************WIFI****************************************************************
-HAS2_Wifi has2wifi;
+HAS2_Wifi has2wifi("http://172.30.1.44");
 void DataChanged();
 void SettingFunc(void);
 void ActivateFunc(void);
@@ -25,9 +25,10 @@ bool tagState[3] = {false,false,false};
 //****************************************Game System****************************************************************
 int tagCnt = 0;
 //****************************************Step Motor****************************************************************
+void StepMotorInit();
 void EscapeClose();
 void EscapeOpen();
-const int stepsPerRevolution = 200;  
+const int stepsPerRevolution = 100; // 기본세팅 200 AE탈장만 100으로 설정함  
 //****************************************SimpleTimer SETUP****************************************************************
 SimpleTimer GameTimer;
 SimpleTimer WifiTimer;

@@ -12,6 +12,12 @@ void DataChanged()
         ActivateFunc();
     }
   }
+  if((String)(const char*)my["device_state"] != (String)(const char*)cur["device_state"]){
+    if((String)(const char*)my["device_state"] == "player_win"){
+        AllNeoOn(BLUE);
+        EscapeClose();
+    }
+  }
   cur = my; // cur 데이터 그룹에 현재 읽어온 데이터 저장
 }
 void WaitFunc(){
