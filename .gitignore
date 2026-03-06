@@ -1,0 +1,4 @@
+ArduinoOutput/
+.vs/
+__pycache__/
+*.pyc
