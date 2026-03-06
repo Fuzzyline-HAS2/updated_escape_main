@@ -1,27 +1,34 @@
 void NeopixelInit()
 {
   for (int i = 0; i < NeopixelNum; ++i)
-  {
     pixels[i].begin();
-  }
-  for (int i = 0; i < NeopixelNum; ++i)
-  {
-    pixels[i].lightColor(color[WHITE]);
+
+  for (int i = 0; i < NeopixelNum; ++i) {
+    for (int j = 0; j < NumPixels[i]; j++)
+      pixels[i].setPixelColor(j, pixels[i].Color(color[WHITE][0], color[WHITE][1], color[WHITE][2]));
+    pixels[i].show();
   }
 }
 
 void NeoBlink(int neo, int neoColor, int cnt, int blinkTime){
-    for(int i = 0; i < cnt; i++){                          //0.5*10=5초동안 점멸
-        pixels[neo].lightColor(color[BLACK]); //전체 off
-        delay(blinkTime);            
-        pixels[neo].lightColor(color[neoColor]); //전체 적색on
-        delay(blinkTime);                   //전체 적색on
+    for(int i = 0; i < cnt; i++){
+        for(int j = 0; j < NumPixels[neo]; j++)
+            pixels[neo].setPixelColor(j, pixels[neo].Color(color[BLACK][0], color[BLACK][1], color[BLACK][2]));
+        pixels[neo].show();
+        delay(blinkTime);
+        for(int j = 0; j < NumPixels[neo]; j++)
+            pixels[neo].setPixelColor(j, pixels[neo].Color(color[neoColor][0], color[neoColor][1], color[neoColor][2]));
+        pixels[neo].show();
+        delay(blinkTime);
     }
 }
 
 void AllNeoOn(int neoColor){
-    for (int i = 0; i < NeopixelNum; ++i)
-        pixels[i].lightColor(color[neoColor]);
+    for (int i = 0; i < NeopixelNum; ++i) {
+        for (int j = 0; j < NumPixels[i]; j++)
+            pixels[i].setPixelColor(j, pixels[i].Color(color[neoColor][0], color[neoColor][1], color[neoColor][2]));
+        pixels[i].show();
+    }
 }
 
 void LineNeoOn(int changeColr, int baseColor, int cnt){

@@ -1,6 +1,7 @@
 void CommnunicationBeetle(){
   Serial.println("READ");
   if(toSubSerial.available() > 0){
+    lastBeetleMs = millis();
     String command = toSubSerial.readStringUntil('\n'); //추가 시리얼의 값을 수신하여 String으로 저장
     // Serial.println("INPUT: " + command);
     // Serial.println("received:" + String(command[0])); //기본 시리얼에 추가 시리얼 내용을 출력
