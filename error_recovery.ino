@@ -6,7 +6,8 @@
 
 // ---------------------------------------------------------
 // LatchSystemFault: 모터/기구 고장 시 safe stop 상태로 고정.
-// RELAY OFF + GameTimer 정지 + WaitFunc 전환. 자동 복구 없음.
+// RELAY OFF + GameTimer 정지 + WaitFunc 전환.
+// 다음 상태 전이 시 ClearSystemFault()로 해제 후 재시도 가능.
 // ---------------------------------------------------------
 void LatchSystemFault(const String& reason) {
     if (systemFaultLatched) return;
@@ -16,7 +17,18 @@ void LatchSystemFault(const String& reason) {
     GameTimer.disable(gameTimerId);
     ptrCurrentMode = WaitFunc;
     Serial.println("[SAFE] FAULT LATCHED: " + reason);
-    Serial.println("[SAFE] 전원 차단 후 기구 상태 점검 필요. 자동 복구 없음.");
+    Serial.println("[SAFE] 다음 상태 전이 명령으로 재시도 가능.");
+}
+
+// ---------------------------------------------------------
+// ClearSystemFault: 전이 시작 직전 기존 fault를 해제.
+// 재시도 중 또 timeout 나면 HandleRuntimeRecovery가 다시 래치.
+// ---------------------------------------------------------
+void ClearSystemFault() {
+    if (!systemFaultLatched) return;
+    systemFaultLatched = false;
+    systemFaultReason = "";
+    Serial.println("[SAFE] Fault cleared. Ready for retry.");
 }
 
 // ---------------------------------------------------------

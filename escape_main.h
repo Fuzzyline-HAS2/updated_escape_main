@@ -64,6 +64,7 @@ String          lastRecoveryReason   = "";     // 마지막 복구 사유
 //****************************************Recovery
 //Functions****************************************************************
 void LatchSystemFault(const String& reason);
+void ClearSystemFault();
 void HandleRuntimeRecovery();
 void RecoverBeetleConnection();
 void ResetBeetleErrorCounters();

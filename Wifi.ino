@@ -14,6 +14,7 @@ void DataChanged()
   }
   if((String)(const char*)my["device_state"] != (String)(const char*)cur["device_state"]){
     if((String)(const char*)my["device_state"] == "player_win"){
+        ClearSystemFault();  // 이전 fault 해제 — player_win은 항상 실행 가능
         AllNeoOn(BLUE);
         EscapeClose();
     }
@@ -26,6 +27,7 @@ void WaitFunc(){
 
 void SettingFunc(void)
 {
+    ClearSystemFault();  // 이전 fault 해제 — 재시도 허용
     MarkTransitionStart("setting", (String)(const char*)my["device_state"]);
     Serial.println("SETTING");
     digitalWrite(RELAY_PIN, HIGH);
@@ -45,12 +47,7 @@ void SettingFunc(void)
 }
 
 void ActivateFunc(void){
-    // 기구 고장 래치 상태면 진입 차단
-    if (systemFaultLatched) {
-        Serial.println("[SAFE] ActivateFunc blocked: " + systemFaultReason);
-        return;
-    }
-
+    ClearSystemFault();  // 이전 fault 해제 — 재시도 허용 (또 timeout 나면 HandleRuntimeRecovery가 다시 래치)
     MarkTransitionStart("activate", (String)(const char*)my["device_state"]);
     Serial.println("ACTIVATE");
     myDFPlayer.playLargeFolder(1, VE1);
@@ -71,6 +68,7 @@ void ActivateFunc(void){
 }
 
 void ReadyFunc(void){
+    ClearSystemFault();  // 이전 fault 해제 — 재시도 허용
     MarkTransitionStart("ready", (String)(const char*)my["device_state"]);
     Serial.println("READY");
     digitalWrite(RELAY_PIN, HIGH);

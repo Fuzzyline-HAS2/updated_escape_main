@@ -76,6 +76,7 @@ class EscapeMainSM:
 
         if self.device_state != self._cur_device:
             if self.device_state == "player_win":
+                self._clear_system_fault()
                 self._ev("AllNeoOn(BLUE)")
                 self._ev("EscapeClose")
 
@@ -220,6 +221,7 @@ class EscapeMainSM:
 
     def _setting_func(self):
         """Wifi.ino SettingFunc() — transition lifecycle 포함"""
+        self._clear_system_fault()
         self.mark_transition_start("setting", self.device_state)
         self._ev("SETTING")
         self.relay_high = True
@@ -235,6 +237,7 @@ class EscapeMainSM:
 
     def _ready_func(self):
         """Wifi.ino ReadyFunc() — transition lifecycle 포함"""
+        self._clear_system_fault()
         self.mark_transition_start("ready", self.device_state)
         self._ev("READY")
         self.relay_high = True
@@ -248,10 +251,8 @@ class EscapeMainSM:
         self.mark_transition_success()
 
     def _activate_func(self):
-        """Wifi.ino ActivateFunc() — fault guard + transition lifecycle 포함"""
-        if self.system_fault_latched:
-            self._ev(f"[SAFE] ActivateFunc blocked: {self.system_fault_reason}")
-            return
+        """Wifi.ino ActivateFunc() — transition lifecycle 포함 (재시도 허용)"""
+        self._clear_system_fault()
         self.mark_transition_start("activate", self.device_state)
         self._ev("ACTIVATE")
         self._ev("MP3 VE1")
@@ -338,6 +339,14 @@ class EscapeMainSM:
         self._timer_enabled = False
         self._mode = "wait"
         self._ev(f"[SAFE] FAULT LATCHED: {reason}")
+
+    def _clear_system_fault(self):
+        """ClearSystemFault() 시뮬레이션. 전이 시작 직전 호출."""
+        if not self.system_fault_latched:
+            return
+        self.system_fault_latched = False
+        self.system_fault_reason = ""
+        self._ev("[SAFE] Fault cleared. Ready for retry.")
 
     def _recover_beetle_connection(self):
         """RecoverBeetleConnection() 시뮬레이션."""
