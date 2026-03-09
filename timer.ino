@@ -10,7 +10,6 @@ void WifiIntervalFunc(){
     bool nowConnected = (WiFi.status() == WL_CONNECTED);
     if (!lastWifiConnected && nowConnected) {
         Serial.println("[WIFI] Reconnected.");
-        RecoverToLastStableState("wifi reconnected");
     }
     lastWifiConnected = nowConnected;
 

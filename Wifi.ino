@@ -27,61 +27,46 @@ void WaitFunc(){
 
 void SettingFunc(void)
 {
-    ClearSystemFault();  // 이전 fault 해제 — 재시도 허용
-    MarkTransitionStart("setting", (String)(const char*)my["device_state"]);
+    ClearSystemFault();
     Serial.println("SETTING");
     digitalWrite(RELAY_PIN, HIGH);
     AllNeoOn(WHITE);
     EscapeClose();
 
-    // 모터 timeout 발생 시 전이 실패 — HandleRuntimeRecovery가 LatchSystemFault 처리
     if (motorCloseTimeout) {
-        MarkTransitionFailed();
         return;
     }
 
     ptrCurrentMode = WaitFunc;
     GameTimer.disable(gameTimerId);
-    CaptureStableState("setting", (String)(const char*)my["device_state"], DOOR_CLOSED);
-    MarkTransitionSuccess();
 }
 
 void ActivateFunc(void){
-    ClearSystemFault();  // 이전 fault 해제 — 재시도 허용 (또 timeout 나면 HandleRuntimeRecovery가 다시 래치)
-    MarkTransitionStart("activate", (String)(const char*)my["device_state"]);
+    ClearSystemFault();
     Serial.println("ACTIVATE");
     myDFPlayer.playLargeFolder(1, VE1);
     AllNeoOn(YELLOW);
     EscapeOpen();
 
-    // 모터 timeout 발생 시 전이 실패
     if (motorOpenTimeout) {
-        MarkTransitionFailed();
         return;
     }
 
     GameTimer.enable(gameTimerId);
     toSubSerial.flush();
     ptrCurrentMode = TagCount;
-    CaptureStableState("activate", (String)(const char*)my["device_state"], DOOR_OPEN);
-    MarkTransitionSuccess();
 }
 
 void ReadyFunc(void){
-    ClearSystemFault();  // 이전 fault 해제 — 재시도 허용
-    MarkTransitionStart("ready", (String)(const char*)my["device_state"]);
+    ClearSystemFault();
     Serial.println("READY");
     digitalWrite(RELAY_PIN, HIGH);
     AllNeoOn(RED);
     EscapeClose();
 
-    // 모터 timeout 발생 시 전이 실패
     if (motorCloseTimeout) {
-        MarkTransitionFailed();
         return;
     }
 
     ptrCurrentMode = WaitFunc;
-    CaptureStableState("ready", (String)(const char*)my["device_state"], DOOR_CLOSED);
-    MarkTransitionSuccess();
 }

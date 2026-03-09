@@ -21,11 +21,6 @@ void TagCount(){
         EscapeClose();
         GameTimer.disable(gameTimerId);
         ptrCurrentMode = WaitFunc;
-        // escape 성공 후 안정 상태 갱신 (device_state=escape, 문=CLOSED)
-        // game_state는 서버 기원이므로 현재 서버 값 유지
-        if (!motorCloseTimeout) {
-            CaptureStableState("activate", "escape", DOOR_CLOSED);
-        }
         delay(5000);
         myDFPlayer.playLargeFolder(1, VE5);
     }
