@@ -12,9 +12,9 @@ ESP32 기반 탈출장치 메인 컨트롤러입니다.
 ```text
 escape_main/
 ├── escape_main.ino           메인 setup / loop
-├── escape_main.h             전역 상태, stable snapshot, recovery 선언
-├── error_recovery.ino        런타임 복구 / safe stop / stable state 복원
-├── Wifi.ino                  서버 상태 반영과 상태 전이
+├── escape_main.h             전역 상태, recovery 선언
+├── error_recovery.ino        런타임 복구 / safe stop
+├── Wifi.ino                  서버 상태 반영과 상태 전이 (ClearSystemFault 포함)
 ├── Game_system.ino           태그 집계 및 escape 처리
 ├── serial_Communication.ino  Beetle UART 패킷 처리
 ├── stepper_Motor.ino         EscapeOpen / EscapeClose
@@ -94,41 +94,10 @@ escape_main/
 
 핵심 원칙:
 
-- 통신 / 논리 오류: 마지막 stable state로 복구
-- 모터 / 기구 오류: safe stop
+- 통신 / 논리 오류: Beetle UART 재초기화
+- 모터 / 기구 오류: safe stop → 다음 서버 전이 명령으로 자동 해제
 
-### 1. Stable state 복구
-
-정상 전이가 끝나면 마지막 안정 상태를 snapshot으로 저장합니다.
-
-저장 항목:
-
-- `stableGameState`
-- `stableDeviceState`
-- 릴레이 상태
-- GameTimer enable 여부
-- 현재 모드(`WaitFunc` / `TagCount`)
-- 문 목표 상태(`OPEN` / `CLOSED`)
-
-상태 전이 함수는 아래 흐름을 따릅니다.
-
-1. `MarkTransitionStart(...)`
-2. 실제 전이 실행
-3. 성공 시 `CaptureStableState(...)`
-4. `MarkTransitionSuccess()`
-5. 실패 시 `MarkTransitionFailed()` 후 기존 stable state 유지
-
-복구가 필요하면 `RecoverToLastStableState(...)`가 실행되어 아래를 재적용합니다.
-
-- LED 색
-- 릴레이 상태
-- GameTimer enable/disable
-- `ptrCurrentMode`
-- 필요 시 `device_state=escape` 재전송
-
-복구 시 MP3 재생은 하지 않습니다.
-
-### 2. Beetle UART 복구
+### 1. Beetle UART 복구
 
 Beetle silence는 복구 트리거가 아닙니다.
 
@@ -143,10 +112,10 @@ Beetle silence는 복구 트리거가 아닙니다.
 1. bad event 발생
 2. `HandleRuntimeRecovery()`가 streak 누적
 3. 3사이클 누적 시 `RecoverBeetleConnection()` 실행
-4. UART 재초기화 후 `RecoverToLastStableState("beetle uart recovery")`
-5. 복구 자체가 반복 실패하면 마지막 수단으로 `ESP.restart()`
+4. UART 재초기화 + 오류 카운터 초기화 (`R` × 3 → `W` 재전송)
+5. 복구가 3회 이상 반복 실패하면 마지막 수단으로 `ESP.restart()`
 
-### 3. `device_state` 전송 재시도
+### 2. `device_state` 전송 재시도
 
 `device_state=escape`는 `SendDeviceStateWithRetry()`를 통해 전송합니다.
 
@@ -155,30 +124,32 @@ Beetle silence는 복구 트리거가 아닙니다.
 - 최대 3회 시도
 - 실패 시 로그만 남기고 종료
 
-### 4. Safe stop
+### 3. Safe stop
 
-모터 / 기구 fault는 상태복구보다 안전정지가 우선입니다.
+모터 / 기구 fault는 즉시 safe stop으로 고정합니다.
 
-트리거 예:
+트리거:
 
 - `EscapeClose()` timeout
 - `EscapeOpen()` timeout
 
-동작:
+동작 (`LatchSystemFault()`):
 
 - `systemFaultLatched = true`
 - fault reason 저장
-- 릴레이 OFF
+- 릴레이 OFF (HIGH)
 - GameTimer 정지
 - `ptrCurrentMode = WaitFunc`
-- 이후 `ActivateFunc()` 차단
 
-이 경우 stable state 복구는 막습니다.
+해제 (`ClearSystemFault()`):
+
+- 서버에서 `setting`, `ready`, `activate`, `player_win` 전이 명령이 오면 각 함수 첫머리에서 자동 호출
+- 재시도 중 또 timeout이 나면 `HandleRuntimeRecovery()`가 다시 래치
 
 즉:
 
-- 통신 복구 -> 마지막 stable state로 복원
-- 모터 fault -> 복원하지 않고 safe stop 유지
+- 통신 오류 → Beetle UART 재초기화
+- 모터 fault → safe stop 고정, 다음 서버 전이 명령이 올 때 자동 해제 후 재시도
 
 ## 언제 재부팅하나
 
@@ -210,11 +181,10 @@ python -m pytest tests -v -p no:cacheprovider
 - 상태 전이: `setting`, `ready`, `activate`
 - 태그 집계와 `device_state=escape` 전송
 - Beetle bad event 3회 누적 시 UART recovery
-- stable snapshot 갱신과 유지
-- transition 실패 시 stable state 보존
-- fault latched 상태에서 `activate` 차단
-- recovery 후 relay / timer / mode / LED 복원
-- motor fault 시 safe stop 유지
+- Beetle silence는 recovery 트리거가 아님
+- fault latched 상태에서 safe stop 유지
+- `ClearSystemFault()` 재시도: 성공 시 해제, 재실패 시 재래치
+- motor fault → safe stop → 서버 전이 명령으로 재시도 허용
 
 ### 수동 확인 포인트
 
@@ -222,14 +192,15 @@ python -m pytest tests -v -p no:cacheprovider
 - malformed `T` packet 3회 후 UART recovery 로그가 나오는지
 - unknown command 누적 시 recovery가 동작하는지
 - 모터 timeout 시 `[SAFE] FAULT LATCHED` 후 재구동이 막히는지
-- recovery 후 마지막 stable state 기준으로 출력이 다시 맞는지
+- `setting` / `ready` / `activate` 명령 재수신 시 fault가 해제되고 재시도되는지
+- 재시도 중 또 timeout이 나면 fault가 다시 래치되는지
 
 ## 파일별 역할
 
 - [escape_main.ino](/c:/Users/ok/escape_main/escape_main.ino): 초기화와 QC 룰 등록
-- [escape_main.h](/c:/Users/ok/escape_main/escape_main.h): 전역 상태, stable snapshot, recovery 선언
-- [error_recovery.ino](/c:/Users/ok/escape_main/error_recovery.ino): 복구, safe stop, stable restore
-- [Wifi.ino](/c:/Users/ok/escape_main/Wifi.ino): 상태 전이와 stable state 캡처
+- [escape_main.h](/c:/Users/ok/escape_main/escape_main.h): 전역 상태, recovery 선언
+- [error_recovery.ino](/c:/Users/ok/escape_main/error_recovery.ino): 복구, safe stop
+- [Wifi.ino](/c:/Users/ok/escape_main/Wifi.ino): 상태 전이, 전이 첫머리에서 `ClearSystemFault()` 호출
 - [Game_system.ino](/c:/Users/ok/escape_main/Game_system.ino): 태그 집계와 escape 처리
 - [serial_Communication.ino](/c:/Users/ok/escape_main/serial_Communication.ino): Beetle 이벤트 검증
 - [stepper_Motor.ino](/c:/Users/ok/escape_main/stepper_Motor.ino): 모터 timeout guard
@@ -240,5 +211,5 @@ python -m pytest tests -v -p no:cacheprovider
 
 이 프로젝트의 에러 처리 정책은 다음 두 줄로 요약됩니다.
 
-- 통신 / 논리 오류는 마지막 stable state로 복구한다.
-- 모터 / 기구 오류는 자동복구하지 않고 safe stop으로 고정한다.
+- 통신 / 논리 오류는 Beetle UART를 재초기화한다.
+- 모터 / 기구 오류는 safe stop으로 고정하고, 다음 서버 전이 명령이 올 때 자동 해제 후 재시도한다.
