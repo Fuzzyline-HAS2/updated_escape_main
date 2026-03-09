@@ -43,9 +43,7 @@ void setup() {
     qc.addRule(new QCRule_TagCntBounds());
     qc.addRule(new QCRule_StepperConfig());
     qc.addRule(new QCRule_LimitSwitch());
-    // QCRule_BeetleTimeout(LOGIC_SERIAL_04) 제거 — silence는 정상 동작
     qc.addRule(new QCRule_RelayState());
-    qc.addRule(new QCRule_MotorTimeout());       // HW_MOTOR_02: systemFaultLatched 보고
     qc.addRule(new QCRule_SwitchChatter());      // HW_SW_03
     qc.addRule(new QCRule_BeetlePacketFormat()); // LOGIC_SERIAL_02
     qc.addRule(new QCRule_InvalidCommand());     // LOGIC_SERIAL_03

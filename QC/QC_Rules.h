@@ -282,15 +282,16 @@ public:
       }
     }
 
-    // device_state 허용값: setting / activate / ready / escape / player_win / ""
+    // device_state 허용값: setting / activate / ready / escape / player_win / player_lose / ""
     if (my.containsKey("device_state")) {
       String dState = safeStr(my["device_state"]);
       bool dValid = (dState == "setting" || dState == "activate" ||
                      dState == "ready" || dState == "escape" ||
-                     dState == "player_win" || dState == "");
+                     dState == "player_win" || dState == "player_lose" ||
+                     dState == "");
       if (!dValid) {
         return QCResult(QCLevel::WARN, getId(), "device_state",
-                        "setting/activate/ready/escape/player_win", dState,
+                        "setting/activate/ready/escape/player_win/player_lose", dState,
                         "서버 device_state 설정 확인");
       }
     }
@@ -441,30 +442,6 @@ public:
                       val, "SettingFunc/ReadyFunc 에서 RELAY_PIN HIGH 또는 EscapeClose() 확인");
     }
 
-    return QCResult();
-  }
-};
-
-// ---------------------------------------------------------
-// [HW_MOTOR_02] 모터 고장 safe stop 상태 보고
-// ---------------------------------------------------------
-// HandleRuntimeRecovery()가 motorCloseTimeout/motorOpenTimeout을 감지하면
-// LatchSystemFault()를 통해 systemFaultLatched=true로 설정합니다.
-// 이 QC 룰은 래치 상태를 읽어 FAIL을 보고합니다 (자동 해제 없음).
-class QCRule_MotorTimeout : public IQCRule {
-public:
-  String getId() const override { return "HW_MOTOR_02"; }
-  String getName() const override { return "Motor Fault Safe Stop"; }
-  bool isFastCheck() const override { return false; }
-
-  QCResult check() override {
-    extern bool systemFaultLatched;
-    extern String systemFaultReason;
-    if (systemFaultLatched) {
-      return QCResult(QCLevel::FAIL, getId(), "System Fault Latched",
-                      "No fault", systemFaultReason,
-                      "전원 차단 후 기구 상태 점검. 수동 재시작 필요.");
-    }
     return QCResult();
   }
 };

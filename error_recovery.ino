@@ -1,35 +1,7 @@
 // error_recovery.ino
 // 런타임 에러 감지 및 복구 로직.
 // 설계 원칙: Beetle silence는 오류가 아님. bad event(unknown cmd / 포맷 오류 / 파싱 실패)
-// 가 연속 3사이클 누적될 때만 UART 재초기화. 모터 timeout은 즉시 safe stop.
-// 통신/논리 오류 → 마지막 stable state로 복구. 기구/모터 오류 → safe stop.
-
-// ---------------------------------------------------------
-// LatchSystemFault: 모터/기구 고장 시 safe stop 상태로 고정.
-// RELAY OFF + GameTimer 정지 + WaitFunc 전환.
-// 다음 상태 전이 시 ClearSystemFault()로 해제 후 재시도 가능.
-// ---------------------------------------------------------
-void LatchSystemFault(const String& reason) {
-    if (systemFaultLatched) return;
-    systemFaultLatched = true;
-    systemFaultReason = reason;
-    digitalWrite(RELAY_PIN, HIGH);
-    GameTimer.disable(gameTimerId);
-    ptrCurrentMode = WaitFunc;
-    Serial.println("[SAFE] FAULT LATCHED: " + reason);
-    Serial.println("[SAFE] 다음 상태 전이 명령으로 재시도 가능.");
-}
-
-// ---------------------------------------------------------
-// ClearSystemFault: 전이 시작 직전 기존 fault를 해제.
-// 재시도 중 또 timeout 나면 HandleRuntimeRecovery가 다시 래치.
-// ---------------------------------------------------------
-void ClearSystemFault() {
-    if (!systemFaultLatched) return;
-    systemFaultLatched = false;
-    systemFaultReason = "";
-    Serial.println("[SAFE] Fault cleared. Ready for retry.");
-}
+// 가 연속 3사이클 누적될 때만 UART 재초기화.
 
 // ---------------------------------------------------------
 // ResetBeetleErrorCounters: 유효 패킷 수신 또는 복구 후 오류 카운터 초기화.
@@ -65,22 +37,10 @@ void RecoverBeetleConnection() {
 
 // ---------------------------------------------------------
 // HandleRuntimeRecovery: 매 GameTimerFunc / WifiIntervalFunc 호출 시 실행.
-// 1) 모터 timeout 플래그 → 즉시 LatchSystemFault (safe stop, 상태 복구 없음)
-// 2) bad event 누적 → 3사이클 연속 시 RecoverBeetleConnection → stable 복구
+// bad event 누적 → 3사이클 연속 시 RecoverBeetleConnection
 // ※ Beetle silence(무수신)는 bad event로 간주하지 않음.
 // ---------------------------------------------------------
 void HandleRuntimeRecovery() {
-    // --- 모터 timeout: 즉시 safe stop (stable restore 금지) ---
-    if (motorCloseTimeout || motorOpenTimeout) {
-        String reason = motorCloseTimeout
-            ? "EscapeClose() timeout (SW_PIN never HIGH)"
-            : "EscapeOpen() timeout";
-        motorCloseTimeout = false;
-        motorOpenTimeout = false;
-        LatchSystemFault(reason);
-        return;
-    }
-
     // --- bad event 누적 감지 (delta 방식, silence 제외) ---
     static int prevCmd = 0, prevFmt = 0, prevTag = 0;
 

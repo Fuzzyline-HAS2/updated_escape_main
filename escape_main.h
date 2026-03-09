@@ -30,20 +30,14 @@ bool tagState[3] = {false, false, false};
 //System****************************************************************
 int tagCnt = 0;
 unsigned long lastBeetleMs = 0; // Beetle 마지막 수신 시각
-bool motorCloseTimeout = false;  // HW_MOTOR_02: EscapeClose() 타임아웃 플래그
-bool motorOpenTimeout = false;   // HW_MOTOR_02: EscapeOpen() 타임아웃 플래그
 String lastBeetleRawPacket = ""; // LOGIC_SERIAL_02: 마지막 수신 T 패킷 원문
 int invalidCmdCount = 0;         // LOGIC_SERIAL_03: 허용되지 않은 명령 수신 횟수
 int packetFormatErrorCount = 0;  // LOGIC_SERIAL_02: T 패킷 포맷 오류 누적
 int tagParseErrorCount = 0;      // LOGIC_TAG_02: 태그 파싱 실패 누적
 uint8_t beetleBadEventStreak = 0;   // 연속 bad-event 사이클 수 (silence 제외)
 uint8_t beetleRecoverAttempts = 0;  // Beetle UART 복구 시도 횟수
-bool systemFaultLatched = false;    // 모터/기구 고장 래치 (수동 복구 필요)
-String systemFaultReason = "";      // 고장 원인 메시지
 //****************************************Recovery
 //Functions****************************************************************
-void LatchSystemFault(const String& reason);
-void ClearSystemFault();
 void HandleRuntimeRecovery();
 void RecoverBeetleConnection();
 void ResetBeetleErrorCounters();
