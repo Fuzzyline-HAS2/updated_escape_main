@@ -1,103 +1,244 @@
 # escape_main
 
-탈출 장치(스테퍼 모터 + RFID 태그) ESP32 메인 컨트롤러 코드
+ESP32 기반 탈출장치 메인 컨트롤러입니다.
 
----
+- 상태 입력: HAS 서버의 `game_state` / `device_state`
+- 현장 입력: Beetle UART 태그 패킷
+- 구동 출력: 스테퍼 모터, 릴레이, NeoPixel, DFPlayer
+- 진단: QC 룰 엔진 + 런타임 오류 복구 계층
 
-## 프로젝트 구조
+## 구조
 
-```
+```text
 escape_main/
-├── escape_main.ino         메인 setup / loop
-├── escape_main.h           전역 변수 및 객체 선언
-├── Library_and_pin.h       핀 번호 및 라이브러리 include
-├── Wifi.ino                서버 통신 및 상태 전환 (DataChanged, SettingFunc 등)
-├── Game_system.ino         태그 카운트 및 탈출 로직 (TagCount)
-├── serial_Communication.ino Beetle 서브 컨트롤러 시리얼 통신
-├── stepper_Motor.ino       스테퍼 모터 제어 (EscapeOpen / EscapeClose)
-├── neopixel.ino            Neopixel LED 제어
-├── dfplayer.ino            MP3 재생 (DFPlayer)
-├── timer.ino               SimpleTimer 초기화
-├── QC/                     하드웨어 / 소프트웨어 오류 자동 감지
-└── tests/                  Python 소프트웨어 테스트 하네스
+├── escape_main.ino           메인 setup / loop
+├── escape_main.h             전역 상태, stable snapshot, recovery 선언
+├── error_recovery.ino        런타임 복구 / safe stop / stable state 복원
+├── Wifi.ino                  서버 상태 반영과 상태 전이
+├── Game_system.ino           태그 집계 및 escape 처리
+├── serial_Communication.ino  Beetle UART 패킷 처리
+├── stepper_Motor.ino         EscapeOpen / EscapeClose
+├── neopixel.ino              LED 제어
+├── dfplayer.ino              MP3 재생
+├── timer.ino                 주기 실행
+├── QC/                       QC 룰 엔진
+└── tests/                    Python 상태머신 / recovery 테스트
 ```
 
----
+## 동작 개요
 
-## QC 엔진 (QC/)
+1. `setup()`에서 WiFi, 타이머, 모터, QC 룰을 초기화합니다.
+2. `HAS2_Wifi`가 서버 상태를 받아오면 `DataChanged()`가 `setting`, `ready`, `activate` 전이를 처리합니다.
+3. Beetle은 heartbeat 장치가 아니라 이벤트 장치로 취급합니다.
+4. `T` 패킷으로 태그가 들어오면 `TagCount()`가 3명 escape를 판단하고 `device_state=escape`를 전송합니다.
+5. QC는 이상을 감지해 로그로 보고하고, 실제 복구는 `error_recovery.ino`가 담당합니다.
 
-`setup()`에서 룰을 등록하고 `loop()`의 `QCEngine::getInstance().tick()`으로 자동 실행됩니다.
-이상 감지 시 Serial 모니터에 `[FAIL]` / `[WARN]` 로그를 출력합니다.
+## 오류 탐지
 
-### Fast 룰 (매 loop() 틱마다 실행)
+### 1. QC 룰 기반 탐지
 
-| ID | 테스트 내용 |
-|----|------------|
+`loop()`에서 `QCEngine::getInstance().tick()`이 자동 실행되며, 이상이 있으면 Serial에 `[WARN]`, `[FAIL]` 로그를 남깁니다.
+
+#### Fast 룰
+
+| ID | 내용 |
+|---|---|
 | `NET_WIFI_00` | WiFi 연결 끊김 감지 |
-| `HW_PIN_01` | Neopixel · 모터 · 릴레이 · UART 핀 번호 중복 검사 |
+| `HW_PIN_01` | NeoPixel / 모터 / 릴레이 / UART 핀 충돌 검사 |
 | `HW_GPIO_01` | 출력 핀이 ESP32 입력전용 GPIO(34~39)에 할당됐는지 검사 |
 | `LOGIC_TAG_01` | `tagCnt`가 0~3 범위를 벗어나는지 검사 |
 
-### Slow 룰 (2초 주기 실행)
+#### Slow 룰
 
-| ID | 테스트 내용 |
-|----|------------|
-| `SYS_MEM_01` | 힙 메모리 부족 (< 20KB WARN / < 10KB FAIL) |
-| `NET_WIFI_01` | WiFi 신호 세기 (< -75dBm WARN / < -85dBm FAIL) |
-| `SYS_RST_01` | 부팅 후 1회 — Brownout / WDT / Panic 재시작 원인 감지 |
-| `LOGIC_STATE_01` | 서버에서 수신한 `game_state` / `device_state` 허용값 검사 |
-| `HW_STEPPER_01` | `stepsPerRevolution` 범위 검사 (0 이하 FAIL / >500 WARN) |
-| `HW_SW_01` | `setting` / `ready` 상태에서 리미트 스위치가 LOW면 Close 미완료 |
-| `LOGIC_SERIAL_01` | `activate` 상태에서 Beetle로부터 30초 이상 무응답 감지 |
-| `HW_RELAY_01` | 릴레이 핀 상태와 `game_state`가 불일치하는지 검사 |
+| ID | 내용 |
+|---|---|
+| `SYS_MEM_01` | 힙 메모리 부족 감지 |
+| `NET_WIFI_01` | WiFi RSSI 약화 감지 |
+| `SYS_RST_01` | Brownout / WDT / Panic 재시작 원인 감지 |
+| `LOGIC_STATE_01` | 서버 `game_state` / `device_state` 허용값 검사 |
+| `HW_STEPPER_01` | `stepsPerRevolution` 범위 검사 |
+| `HW_SW_01` | `setting` / `ready`에서 리미트 스위치 상태 불일치 감지 |
+| `HW_RELAY_01` | 릴레이 상태와 `game_state` 불일치 감지 |
+| `HW_MOTOR_02` | 모터 fault latched 상태 보고 |
+| `HW_SW_03` | 리미트 스위치 chatter 감지 |
+| `LOGIC_SERIAL_02` | Beetle `T` 패킷 형식 오류 감지 |
+| `LOGIC_SERIAL_03` | Beetle 알 수 없는 명령 감지 |
+| `LOGIC_TAG_02` | 태그 파싱 실패 누적 감지 |
+| `HW_BOOT_01` | ESP32 strapping pin 사용 경고 |
+| `HW_GPIO_02` | 부팅 직후 출력 핀 안전 상태 경고 |
 
----
+주의:
 
-## Python 테스트 하네스 (tests/)
+- 기존의 `activate 중 Beetle 무응답` 기반 timeout 룰은 제거했습니다.
+- 이 프로젝트에서 Beetle silence는 정상 동작일 수 있으므로, silence는 오류로 간주하지 않습니다.
 
-하드웨어 없이 소프트웨어 로직만 검증합니다.
-`state_machine.py`가 Arduino 로직을 Python으로 미러링하며, pytest로 자동 실행됩니다.
+### 2. 런타임 입력 검증
 
-### 설치
+`serial_Communication.ino`는 Beetle 입력을 이벤트 기반으로 검사합니다.
+
+- 빈 문자열 방어
+- 허용 명령만 통과: `W`, `R`, `T`, `B`, `M`
+- `T` 패킷은 substring 전에 형식 검증
+- 태그 문자열 길이 검사
+- `PlayerDetector()`에서 role 미해석 시 parse failure 누적
+
+즉 Beetle 쪽은 아래 3가지만 복구 대상으로 봅니다.
+
+- malformed `T` packet
+- unknown command
+- tag parse failure
+
+## 오류 복구
+
+복구 로직은 [`error_recovery.ino`](/c:/Users/ok/escape_main/error_recovery.ino) 에 있습니다.
+
+핵심 원칙:
+
+- 통신 / 논리 오류: 마지막 stable state로 복구
+- 모터 / 기구 오류: safe stop
+
+### 1. Stable state 복구
+
+정상 전이가 끝나면 마지막 안정 상태를 snapshot으로 저장합니다.
+
+저장 항목:
+
+- `stableGameState`
+- `stableDeviceState`
+- 릴레이 상태
+- GameTimer enable 여부
+- 현재 모드(`WaitFunc` / `TagCount`)
+- 문 목표 상태(`OPEN` / `CLOSED`)
+
+상태 전이 함수는 아래 흐름을 따릅니다.
+
+1. `MarkTransitionStart(...)`
+2. 실제 전이 실행
+3. 성공 시 `CaptureStableState(...)`
+4. `MarkTransitionSuccess()`
+5. 실패 시 `MarkTransitionFailed()` 후 기존 stable state 유지
+
+복구가 필요하면 `RecoverToLastStableState(...)`가 실행되어 아래를 재적용합니다.
+
+- LED 색
+- 릴레이 상태
+- GameTimer enable/disable
+- `ptrCurrentMode`
+- 필요 시 `device_state=escape` 재전송
+
+복구 시 MP3 재생은 하지 않습니다.
+
+### 2. Beetle UART 복구
+
+Beetle silence는 복구 트리거가 아닙니다.
+
+아래 bad event가 누적될 때만 UART 재초기화를 시도합니다.
+
+- unknown command
+- malformed `T` packet
+- tag parse failure
+
+흐름:
+
+1. bad event 발생
+2. `HandleRuntimeRecovery()`가 streak 누적
+3. 3사이클 누적 시 `RecoverBeetleConnection()` 실행
+4. UART 재초기화 후 `RecoverToLastStableState("beetle uart recovery")`
+5. 복구 자체가 반복 실패하면 마지막 수단으로 `ESP.restart()`
+
+### 3. `device_state` 전송 재시도
+
+`device_state=escape`는 `SendDeviceStateWithRetry()`를 통해 전송합니다.
+
+- WiFi 연결 상태 확인
+- 연결 중일 때만 송신
+- 최대 3회 시도
+- 실패 시 로그만 남기고 종료
+
+### 4. Safe stop
+
+모터 / 기구 fault는 상태복구보다 안전정지가 우선입니다.
+
+트리거 예:
+
+- `EscapeClose()` timeout
+- `EscapeOpen()` timeout
+
+동작:
+
+- `systemFaultLatched = true`
+- fault reason 저장
+- 릴레이 OFF
+- GameTimer 정지
+- `ptrCurrentMode = WaitFunc`
+- 이후 `ActivateFunc()` 차단
+
+이 경우 stable state 복구는 막습니다.
+
+즉:
+
+- 통신 복구 -> 마지막 stable state로 복원
+- 모터 fault -> 복원하지 않고 safe stop 유지
+
+## 언제 재부팅하나
+
+현재 `ESP.restart()`는 제한적으로만 사용합니다.
+
+1. Beetle이 `M` 명령을 보냈을 때
+2. Beetle UART bad-event 복구가 여러 번 반복 실패했을 때
+
+다음 경우에는 재부팅하지 않습니다.
+
+- 모터 timeout
+- 일반 QC `[FAIL]`
+- 단순 Beetle silence
+
+## 테스트
+
+### Python 테스트
+
+Python 상태머신은 Arduino 로직을 미러링하며, recovery 동작까지 검증합니다.
+
+실행:
 
 ```powershell
-cd tests
-py -m pip install -r requirements.txt
+python -m pytest tests -v -p no:cacheprovider
 ```
 
-### 실행
+주요 테스트 영역:
 
-```powershell
-py -m pytest -v
-```
+- 상태 전이: `setting`, `ready`, `activate`
+- 태그 집계와 `device_state=escape` 전송
+- Beetle bad event 3회 누적 시 UART recovery
+- stable snapshot 갱신과 유지
+- transition 실패 시 stable state 보존
+- fault latched 상태에서 `activate` 차단
+- recovery 후 relay / timer / mode / LED 복원
+- motor fault 시 safe stop 유지
 
-### 테스트 목록
+### 수동 확인 포인트
 
-**test_state_transitions.py** — 상태 전환 검증
+- `setting -> ready -> activate`에서 LED / 릴레이 / 타이머 상태가 맞는지
+- malformed `T` packet 3회 후 UART recovery 로그가 나오는지
+- unknown command 누적 시 recovery가 동작하는지
+- 모터 timeout 시 `[SAFE] FAULT LATCHED` 후 재구동이 막히는지
+- recovery 후 마지막 stable state 기준으로 출력이 다시 맞는지
 
-| 테스트 | 내용 |
-|--------|------|
-| `TestSettingState` | `setting` 전환 시 RELAY OFF, EscapeClose 호출, GameTimer 비활성화 확인 |
-| `TestReadyState` | `ready` 전환 시 RELAY OFF, EscapeClose 호출 확인 |
-| `TestActivateState` | `activate` 전환 시 RELAY ON, EscapeOpen 호출, GameTimer 활성화 확인 |
-| `TestChangeDetection` | 동일 상태 재수신 시 함수 재실행 없음 (cur 비교 로직), `player_win` 처리 확인 |
-| `TestFullGameFlow` | `setting → ready → activate` 전체 순서 및 순서 보장 검증 |
+## 파일별 역할
 
-**test_tag_escape.py** — 태그 감지 → escape 전송 검증
+- [escape_main.ino](/c:/Users/ok/escape_main/escape_main.ino): 초기화와 QC 룰 등록
+- [escape_main.h](/c:/Users/ok/escape_main/escape_main.h): 전역 상태, stable snapshot, recovery 선언
+- [error_recovery.ino](/c:/Users/ok/escape_main/error_recovery.ino): 복구, safe stop, stable restore
+- [Wifi.ino](/c:/Users/ok/escape_main/Wifi.ino): 상태 전이와 stable state 캡처
+- [Game_system.ino](/c:/Users/ok/escape_main/Game_system.ino): 태그 집계와 escape 처리
+- [serial_Communication.ino](/c:/Users/ok/escape_main/serial_Communication.ino): Beetle 이벤트 검증
+- [stepper_Motor.ino](/c:/Users/ok/escape_main/stepper_Motor.ino): 모터 timeout guard
+- [QC/QC_Rules.h](/c:/Users/ok/escape_main/QC/QC_Rules.h): QC 탐지 규칙
+- [tests/test_recovery.py](/c:/Users/ok/escape_main/tests/test_recovery.py): recovery 검증
 
-| 테스트 | 내용 |
-|--------|------|
-| `TestTagCountLogic` | 태그 1 / 2개 시 escape 미전송, 3개 시 `device_state=escape` 전송 확인 |
-| `TestTagStateReset` | TagCount 실행 후 `tagState[]` 초기화 확인 |
-| `TestModeTransitionOnEscape` | escape 전송 후 `ptrCurrentMode = WaitFunc` 전환 및 추가 TagCount 차단 확인 |
-| `TestTagCountAccumulation` | 1개 → 2개 → 3개 순차 감지 시 각 단계별 동작 확인 |
+## 요약
 
-**test_edge_cases.py** — 경계 조건 검증
+이 프로젝트의 에러 처리 정책은 다음 두 줄로 요약됩니다.
 
-| 테스트 | 내용 |
-|--------|------|
-| `TestRapidStateChanges` | 빠른 연속 상태 전환 후 최종 상태 정합성 확인 |
-| `TestGameTimerGating` | `setting` / `ready` 상태에서 TagCount가 절대 실행되지 않는지 확인 |
-| `TestRelayStateConsistency` | 각 상태별 릴레이 ON/OFF 정합성 및 `activate → setting` 복귀 시 원복 확인 |
-| `TestTagCntBounds` | `tagCnt`가 음수 또는 3 초과하지 않는지 확인 |
-| `TestDeviceStateIndependent` | `game_state`와 `device_state` 독립 변경 및 알 수 없는 상태값 무시 확인 |
+- 통신 / 논리 오류는 마지막 stable state로 복구한다.
+- 모터 / 기구 오류는 자동복구하지 않고 safe stop으로 고정한다.
