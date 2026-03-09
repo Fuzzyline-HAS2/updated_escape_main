@@ -43,8 +43,14 @@ void setup() {
     qc.addRule(new QCRule_TagCntBounds());
     qc.addRule(new QCRule_StepperConfig());
     qc.addRule(new QCRule_LimitSwitch());
-    qc.addRule(new QCRule_BeetleTimeout());
+    qc.addRule(new QCRule_BeetleTimeout());   // LOGIC_SERIAL_04: 3s WARN / 10s FAIL
     qc.addRule(new QCRule_RelayState());
+    qc.addRule(new QCRule_MotorTimeout());    // HW_MOTOR_02
+    qc.addRule(new QCRule_SwitchChatter());   // HW_SW_03
+    qc.addRule(new QCRule_BeetlePacketFormat()); // LOGIC_SERIAL_02
+    qc.addRule(new QCRule_InvalidCommand());  // LOGIC_SERIAL_03
+    qc.addRule(new QCRule_StrappingPins());   // HW_BOOT_01
+    qc.addRule(new QCRule_OutputInitSafety()); // HW_GPIO_02
 }
 void loop() {
     WifiTimer.run();

@@ -401,15 +401,15 @@ public:
 };
 
 // ---------------------------------------------------------
-// [LOGIC_SERIAL_01] Beetle 시리얼 통신 타임아웃 체크
+// [LOGIC_SERIAL_04] Beetle 시리얼 통신 무음 2단계 타임아웃 체크
 // ---------------------------------------------------------
-// activate 상태에서 Beetle로부터 30초 이상 데이터가 없으면 WARN을 반환합니다.
+// activate 상태에서 Beetle 패킷이 없을 때 3초 WARN, 10초 FAIL 2단계로 경보합니다.
+// 기존 단일 30초 임계값(LOGIC_SERIAL_01)을 실전용 2단계로 대체합니다.
 // lastBeetleMs는 escape_main.h에 선언, serial_Communication.ino에서 갱신됩니다.
-// 최초 1회 이상 수신 후에만 타임아웃을 판단합니다(부팅 직후 오탐 방지).
 class QCRule_BeetleTimeout : public IQCRule {
 public:
-  String getId() const override { return "LOGIC_SERIAL_01"; }
-  String getName() const override { return "Beetle Serial Timeout"; }
+  String getId() const override { return "LOGIC_SERIAL_04"; }
+  String getName() const override { return "Beetle Serial Silence Stage Check"; }
   bool isFastCheck() const override { return false; }
 
   QCResult check() override {
@@ -424,17 +424,22 @@ public:
     if (gState != "activate") return QCResult();
 
     extern unsigned long lastBeetleMs;
+    if (lastBeetleMs == 0) return QCResult(); // 한 번도 수신 안 됨 → 오탐 방지
 
-    // 한 번도 수신 안 된 경우는 스킵 (부팅 직후 오탐 방지)
-    if (lastBeetleMs == 0) return QCResult();
-
-    const unsigned long TIMEOUT_MS = 30000UL;
+    const unsigned long WARN_MS = 3000UL;
+    const unsigned long FAIL_MS = 10000UL;
     unsigned long elapsed = millis() - lastBeetleMs;
-    if (elapsed > TIMEOUT_MS) {
+    String elapsedStr = String(elapsed / 1000) + "s ago";
+    String hint = "Beetle 전원/배선 점검, TX(" + String(HWSERIAL_TX) +
+                  ")/RX(" + String(HWSERIAL_RX) + ") 확인";
+
+    if (elapsed > FAIL_MS) {
+      return QCResult(QCLevel::FAIL, getId(), "Beetle Last Recv",
+                      "< 10s ago", elapsedStr, hint);
+    }
+    if (elapsed > WARN_MS) {
       return QCResult(QCLevel::WARN, getId(), "Beetle Last Recv",
-                      "< 30s ago", String(elapsed / 1000) + "s ago",
-                      "Beetle 전원/배선 점검, TX(" + String(HWSERIAL_TX) +
-                      ")/RX(" + String(HWSERIAL_RX) + ") 확인");
+                      "< 3s ago", elapsedStr, hint);
     }
 
     return QCResult();
@@ -479,6 +484,243 @@ public:
     }
 
     return QCResult();
+  }
+};
+
+// ---------------------------------------------------------
+// [HW_MOTOR_02] 모터 동작 타임아웃 결과 체크
+// ---------------------------------------------------------
+// EscapeClose()/EscapeOpen() 내부 watchdog이 설정한 플래그를 읽어 FAIL 보고합니다.
+// 주기성 QC가 아닌 함수 내부 guard(stepper_Motor.ino)와 연동됩니다.
+// motorCloseTimeout: EscapeClose()에서 10초 내 SW_PIN HIGH 미감지 시 set
+// motorOpenTimeout : EscapeOpen()에서 10초 내 스텝 미완료 시 set
+class QCRule_MotorTimeout : public IQCRule {
+public:
+  String getId() const override { return "HW_MOTOR_02"; }
+  String getName() const override { return "Motor Function Timeout Guard"; }
+  bool isFastCheck() const override { return false; }
+
+  QCResult check() override {
+    extern bool motorCloseTimeout;
+    extern bool motorOpenTimeout;
+
+    if (motorCloseTimeout) {
+      motorCloseTimeout = false; // 보고 후 플래그 해제
+      return QCResult(QCLevel::FAIL, getId(), "EscapeClose() duration",
+                      "< 10s", "> 10s",
+                      "SW_PIN(GPIO " + String(SW_PIN) + ") 배선 점검, 모터 탈조 또는 "
+                      "기계적 걸림 확인. EscapeClose while 루프가 블로킹됩니다.");
+    }
+    if (motorOpenTimeout) {
+      motorOpenTimeout = false;
+      return QCResult(QCLevel::FAIL, getId(), "EscapeOpen() duration",
+                      "< 10s", "> 10s",
+                      "stepsPerRevolution 설정값 점검 또는 모터 전원 확인");
+    }
+    return QCResult();
+  }
+};
+
+// ---------------------------------------------------------
+// [HW_SW_03] 리미트 스위치 채터링(접촉 불량) 검사
+// ---------------------------------------------------------
+// SW_PIN을 20회 × 2ms 간격으로 샘플링(40ms)하여 상태 전환 횟수를 세어
+// 4회 이상이면 채터링/배선 불량으로 WARN합니다.
+// 정상 전환(EscapeClose 완료) = 1회. 채터링 = 수십 회.
+class QCRule_SwitchChatter : public IQCRule {
+public:
+  String getId() const override { return "HW_SW_03"; }
+  String getName() const override { return "Limit Switch Chatter Check"; }
+  bool isFastCheck() const override { return false; }
+
+  QCResult check() override {
+    const int SAMPLES = 20;
+    const int CHATTER_THRESHOLD = 4;
+
+    int prev = digitalRead(SW_PIN);
+    int transitions = 0;
+    for (int i = 0; i < SAMPLES - 1; i++) {
+      delayMicroseconds(2000); // 2ms
+      int cur = digitalRead(SW_PIN);
+      if (cur != prev) transitions++;
+      prev = cur;
+    }
+
+    if (transitions >= CHATTER_THRESHOLD) {
+      return QCResult(QCLevel::WARN, getId(),
+                      "SW_PIN (GPIO " + String(SW_PIN) + ") transitions/40ms",
+                      "< 4", String(transitions),
+                      "리미트 스위치 배선 커넥터 재결선, 접점 산화 또는 케이블 단선 점검");
+    }
+    return QCResult();
+  }
+};
+
+// ---------------------------------------------------------
+// [LOGIC_SERIAL_02] Beetle 패킷 길이/포맷 검사
+// ---------------------------------------------------------
+// 'T' 패킷 수신 시 lastBeetleRawPacket에 원문 저장 후 포맷을 검증합니다.
+// 정상 형식: "T1:xxxx_T2:xxxx_T3:xxxx" (길이 23, 구분자 위치 고정)
+// 형식 불일치 시 WARN → 배선 노이즈, Beetle 펌웨어 불일치 가능성.
+class QCRule_BeetlePacketFormat : public IQCRule {
+public:
+  String getId() const override { return "LOGIC_SERIAL_02"; }
+  String getName() const override { return "Beetle Packet Format Check"; }
+  bool isFastCheck() const override { return false; }
+
+  QCResult check() override {
+    extern String lastBeetleRawPacket;
+    if (lastBeetleRawPacket.length() == 0) return QCResult();
+    if (lastBeetleRawPacket[0] != 'T') return QCResult(); // T 패킷만 검사
+
+    bool formatOk = (lastBeetleRawPacket.length() >= 23 &&
+                     lastBeetleRawPacket[1] == '1' &&
+                     lastBeetleRawPacket[2] == ':' &&
+                     lastBeetleRawPacket[7] == '_' &&
+                     lastBeetleRawPacket[8] == 'T' &&
+                     lastBeetleRawPacket[9] == '2' &&
+                     lastBeetleRawPacket[10] == ':' &&
+                     lastBeetleRawPacket[15] == '_' &&
+                     lastBeetleRawPacket[16] == 'T' &&
+                     lastBeetleRawPacket[17] == '3' &&
+                     lastBeetleRawPacket[18] == ':');
+
+    if (!formatOk) {
+      String val = lastBeetleRawPacket;
+      if (val.length() > 30) val = val.substring(0, 30) + "...";
+      return QCResult(QCLevel::WARN, getId(), "T-Packet Format",
+                      "T1:xxxx_T2:xxxx_T3:xxxx", val,
+                      "Beetle 펌웨어 패킷 포맷 확인, UART 노이즈 또는 baudrate 불일치 점검");
+    }
+    return QCResult();
+  }
+};
+
+// ---------------------------------------------------------
+// [LOGIC_SERIAL_03] 허용되지 않은 명령 문자 검사
+// ---------------------------------------------------------
+// W/R/T/B/M 외 명령이 수신되면 invalidCmdCount가 증가합니다.
+// (serial_Communication.ino의 else 분기에서 카운트)
+// 수신 즉시 WARN → 배선 노이즈, 잘못된 송신 장치 연결 가능성.
+class QCRule_InvalidCommand : public IQCRule {
+public:
+  String getId() const override { return "LOGIC_SERIAL_03"; }
+  String getName() const override { return "Invalid Serial Command Check"; }
+  bool isFastCheck() const override { return false; }
+
+  QCResult check() override {
+    extern int invalidCmdCount;
+    if (invalidCmdCount > 0) {
+      int cnt = invalidCmdCount;
+      invalidCmdCount = 0; // 보고 후 카운터 초기화
+      return QCResult(QCLevel::WARN, getId(), "Invalid Cmd Count",
+                      "0", String(cnt),
+                      "허용 명령: W/R/T/B/M. Beetle TX 배선 및 펌웨어 명령 포맷 확인");
+    }
+    return QCResult();
+  }
+};
+
+// ---------------------------------------------------------
+// [HW_BOOT_01] Strapping 핀 사용 검사 (부팅 1회)
+// ---------------------------------------------------------
+// ESP32 strapping 핀(GPIO 0/2/4/5/12/15)에 릴레이, 스위치, 모터 등
+// 외부 풀업/풀다운이 연결되면 부팅 모드가 변경될 수 있습니다.
+// GPIO12(EN_PIN)는 플래시 전압 스트래핑 핀으로 외부 풀업 시 부팅 불가 → FAIL.
+// 나머지 strapping 핀 사용 → WARN.
+// 현재 프로젝트: SW_PIN=4, EN_PIN=12, DIR_PIN=15 모두 strapping 핀.
+class QCRule_StrappingPins : public IQCRule {
+public:
+  String getId() const override { return "HW_BOOT_01"; }
+  String getName() const override { return "Strapping Pin Usage Check"; }
+  bool isFastCheck() const override { return false; }
+
+  QCResult check() override {
+    static bool reported = false;
+    if (reported) return QCResult();
+    reported = true;
+
+    // ESP32 strapping 핀 목록
+    const int strappingPins[] = {0, 2, 4, 5, 12, 15};
+    const int strappingCount = 6;
+
+    struct PinEntry { int pin; const char *name; };
+    const PinEntry projectPins[] = {
+      {SW_PIN,              "SW_PIN"},
+      {EN_PIN,              "EN_PIN"},
+      {STEP_PIN,            "STEP_PIN"},
+      {DIR_PIN,             "DIR_PIN"},
+      {RELAY_PIN,           "RELAY_PIN"},
+      {LINE_NEOPIXEL_PIN,   "LINE_NEO"},
+      {ROUND_NEOPIXEL_PIN,  "ROUND_NEO"},
+      {ONBOARD_NEOPIXEL_PIN,"ONBOARD_NEO"},
+      {HWSERIAL_TX,         "HWSERIAL_TX"},
+      {HWSERIAL_RX,         "HWSERIAL_RX"},
+      {DFPLAYER_TX_PIN,     "DFPLAYER_TX"},
+      {DFPLAYER_RX_PIN,     "DFPLAYER_RX"},
+    };
+    const int projectCount = (int)(sizeof(projectPins) / sizeof(projectPins[0]));
+
+    String conflicts = "";
+    bool hasFail = false;
+
+    for (int i = 0; i < projectCount; i++) {
+      for (int j = 0; j < strappingCount; j++) {
+        if (projectPins[i].pin == strappingPins[j]) {
+          conflicts += String(projectPins[i].name) +
+                       "(GPIO" + String(projectPins[i].pin) + ") ";
+          if (projectPins[i].pin == 12) hasFail = true;
+        }
+      }
+    }
+
+    if (conflicts.length() > 0) {
+      String hint = hasFail
+        ? "GPIO12(EN_PIN)은 플래시 전압 핀. 외부 풀업 연결 시 1.8V 모드로 부팅 실패 가능"
+        : "부팅 시 외부 강제 풀업/풀다운이 없는지 배선 점검";
+      return QCResult(hasFail ? QCLevel::FAIL : QCLevel::WARN,
+                      getId(), "Strapping Pin Used",
+                      "Non-strapping GPIO only", conflicts, hint);
+    }
+    return QCResult();
+  }
+};
+
+// ---------------------------------------------------------
+// [HW_GPIO_02] 출력 핀 초기 상태 안전성 검사 (부팅 1회)
+// ---------------------------------------------------------
+// 부팅 직후 RELAY_PIN, DIR_PIN 이 안전한 기본값인지 확인합니다.
+// RELAY_PIN: HIGH(OFF)가 정상. LOW면 모터 전원이 켜진 상태로 부팅한 것.
+// DIR_PIN  : setup() 에서 초기값 미지정 시 LOW(기본). 방향이 잘못되면 WARN.
+// EN_PIN   : 코드에서 OUTPUT 설정 없음 → 모터 드라이버 Enable 상태 불확실 → WARN.
+class QCRule_OutputInitSafety : public IQCRule {
+public:
+  String getId() const override { return "HW_GPIO_02"; }
+  String getName() const override { return "Output Pin Boot State Safety"; }
+  bool isFastCheck() const override { return false; }
+
+  QCResult check() override {
+    static bool reported = false;
+    if (reported) return QCResult();
+    reported = true;
+
+    // RELAY_PIN: HIGH = 모터 전원 OFF = 안전
+    if (digitalRead(RELAY_PIN) == LOW) {
+      return QCResult(QCLevel::WARN, getId(),
+                      "RELAY_PIN (GPIO " + String(RELAY_PIN) + ") at boot",
+                      "HIGH (motor OFF)", "LOW (motor ON)",
+                      "setup()에서 digitalWrite(RELAY_PIN, HIGH) 순서 확인. "
+                      "StepMotorInit() 이전에 릴레이 핀을 HIGH로 초기화해야 합니다.");
+    }
+
+    // EN_PIN: 코드에서 OUTPUT으로 설정하지 않음 → 외부 풀다운이면 모터 활성화 상태
+    // pinMode()로 OUTPUT 지정 없이 LOW 상태면 A4988/DRV8825 Enable(모터 동작 중)
+    // → 물리적으로 확인 불가하지만 정적 경고로 알림
+    return QCResult(QCLevel::WARN, getId(),
+                    "EN_PIN (GPIO " + String(EN_PIN) + ") init",
+                    "OUTPUT + HIGH (disabled)", "Not configured",
+                    "StepMotorInit()에 pinMode(EN_PIN, OUTPUT); digitalWrite(EN_PIN, HIGH); 추가 권장. "
+                    "현재 EN_PIN 미초기화 시 드라이버 Enable 상태가 불확실합니다.");
   }
 };
 

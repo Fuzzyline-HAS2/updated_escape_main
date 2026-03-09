@@ -30,6 +30,10 @@ bool tagState[3] = {false, false, false};
 //System****************************************************************
 int tagCnt = 0;
 unsigned long lastBeetleMs = 0; // Beetle 마지막 수신 시각
+bool motorCloseTimeout = false;  // HW_MOTOR_02: EscapeClose() 타임아웃 플래그
+bool motorOpenTimeout = false;   // HW_MOTOR_02: EscapeOpen() 타임아웃 플래그
+String lastBeetleRawPacket = ""; // LOGIC_SERIAL_02: 마지막 수신 T 패킷 원문
+int invalidCmdCount = 0;         // LOGIC_SERIAL_03: 허용되지 않은 명령 수신 횟수
 //****************************************Step
 //Motor****************************************************************
 void StepMotorInit();

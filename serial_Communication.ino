@@ -13,6 +13,7 @@ void CommnunicationBeetle(){
       Serial.println("Beetle Reset Success");
     }
     else if(command[0] == 'T'){   // Packet ex.  "T1:GxP0_T2:GxP0_T3:GxP0"
+      lastBeetleRawPacket = command; // LOGIC_SERIAL_02: 원문 저장
       Serial.println(command);
       tag1 = command.substring(3,7);
       tag2 = command.substring(11,15);
@@ -31,6 +32,11 @@ void CommnunicationBeetle(){
     }
     else if(command[0] == 'M'){
       ESP.restart();
+    }
+    else {
+      // LOGIC_SERIAL_03: 허용되지 않은 명령 문자
+      invalidCmdCount++;
+      Serial.println("[LOGIC_SERIAL_03] WARN: Unknown command char '" + String(command[0]) + "'");
     }
   }
   while(toSubSerial.available()){
