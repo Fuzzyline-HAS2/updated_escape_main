@@ -400,51 +400,9 @@ public:
   }
 };
 
-// ---------------------------------------------------------
-// [LOGIC_SERIAL_04] Beetle 시리얼 통신 무음 2단계 타임아웃 체크
-// ---------------------------------------------------------
-// activate 상태에서 Beetle 패킷이 없을 때 3초 WARN, 10초 FAIL 2단계로 경보합니다.
-// 기존 단일 30초 임계값(LOGIC_SERIAL_01)을 실전용 2단계로 대체합니다.
-// lastBeetleMs는 escape_main.h에 선언, serial_Communication.ino에서 갱신됩니다.
-class QCRule_BeetleTimeout : public IQCRule {
-public:
-  String getId() const override { return "LOGIC_SERIAL_04"; }
-  String getName() const override { return "Beetle Serial Silence Stage Check"; }
-  bool isFastCheck() const override { return false; }
-
-  QCResult check() override {
-    if (my.size() == 0) return QCResult();
-
-    auto safeStr = [](JsonVariantConst v) -> String {
-      const char *p = v.as<const char *>();
-      return p ? String(p) : String("");
-    };
-
-    String gState = safeStr(my["game_state"]);
-    if (gState != "activate") return QCResult();
-
-    extern unsigned long lastBeetleMs;
-    if (lastBeetleMs == 0) return QCResult(); // 한 번도 수신 안 됨 → 오탐 방지
-
-    const unsigned long WARN_MS = 3000UL;
-    const unsigned long FAIL_MS = 10000UL;
-    unsigned long elapsed = millis() - lastBeetleMs;
-    String elapsedStr = String(elapsed / 1000) + "s ago";
-    String hint = "Beetle 전원/배선 점검, TX(" + String(HWSERIAL_TX) +
-                  ")/RX(" + String(HWSERIAL_RX) + ") 확인";
-
-    if (elapsed > FAIL_MS) {
-      return QCResult(QCLevel::FAIL, getId(), "Beetle Last Recv",
-                      "< 10s ago", elapsedStr, hint);
-    }
-    if (elapsed > WARN_MS) {
-      return QCResult(QCLevel::WARN, getId(), "Beetle Last Recv",
-                      "< 3s ago", elapsedStr, hint);
-    }
-
-    return QCResult();
-  }
-};
+// LOGIC_SERIAL_04 (silence 기반 timeout) 제거됨.
+// Beetle은 이벤트 장치이므로 무응답은 정상일 수 있음.
+// bad event 누적 복구는 error_recovery.ino의 HandleRuntimeRecovery() 참조.
 
 // ---------------------------------------------------------
 // [HW_RELAY_01] 릴레이 상태 vs game_state 일관성 체크
@@ -488,34 +446,24 @@ public:
 };
 
 // ---------------------------------------------------------
-// [HW_MOTOR_02] 모터 동작 타임아웃 결과 체크
+// [HW_MOTOR_02] 모터 고장 safe stop 상태 보고
 // ---------------------------------------------------------
-// EscapeClose()/EscapeOpen() 내부 watchdog이 설정한 플래그를 읽어 FAIL 보고합니다.
-// 주기성 QC가 아닌 함수 내부 guard(stepper_Motor.ino)와 연동됩니다.
-// motorCloseTimeout: EscapeClose()에서 10초 내 SW_PIN HIGH 미감지 시 set
-// motorOpenTimeout : EscapeOpen()에서 10초 내 스텝 미완료 시 set
+// HandleRuntimeRecovery()가 motorCloseTimeout/motorOpenTimeout을 감지하면
+// LatchSystemFault()를 통해 systemFaultLatched=true로 설정합니다.
+// 이 QC 룰은 래치 상태를 읽어 FAIL을 보고합니다 (자동 해제 없음).
 class QCRule_MotorTimeout : public IQCRule {
 public:
   String getId() const override { return "HW_MOTOR_02"; }
-  String getName() const override { return "Motor Function Timeout Guard"; }
+  String getName() const override { return "Motor Fault Safe Stop"; }
   bool isFastCheck() const override { return false; }
 
   QCResult check() override {
-    extern bool motorCloseTimeout;
-    extern bool motorOpenTimeout;
-
-    if (motorCloseTimeout) {
-      motorCloseTimeout = false; // 보고 후 플래그 해제
-      return QCResult(QCLevel::FAIL, getId(), "EscapeClose() duration",
-                      "< 10s", "> 10s",
-                      "SW_PIN(GPIO " + String(SW_PIN) + ") 배선 점검, 모터 탈조 또는 "
-                      "기계적 걸림 확인. EscapeClose while 루프가 블로킹됩니다.");
-    }
-    if (motorOpenTimeout) {
-      motorOpenTimeout = false;
-      return QCResult(QCLevel::FAIL, getId(), "EscapeOpen() duration",
-                      "< 10s", "> 10s",
-                      "stepsPerRevolution 설정값 점검 또는 모터 전원 확인");
+    extern bool systemFaultLatched;
+    extern String systemFaultReason;
+    if (systemFaultLatched) {
+      return QCResult(QCLevel::FAIL, getId(), "System Fault Latched",
+                      "No fault", systemFaultReason,
+                      "전원 차단 후 기구 상태 점검. 수동 재시작 필요.");
     }
     return QCResult();
   }
@@ -610,12 +558,34 @@ public:
 
   QCResult check() override {
     extern int invalidCmdCount;
+    // 카운터를 여기서 초기화하지 않음 — HandleRuntimeRecovery/ResetBeetleErrorCounters 담당
     if (invalidCmdCount > 0) {
-      int cnt = invalidCmdCount;
-      invalidCmdCount = 0; // 보고 후 카운터 초기화
-      return QCResult(QCLevel::WARN, getId(), "Invalid Cmd Count",
-                      "0", String(cnt),
+      return QCResult(QCLevel::WARN, getId(), "Invalid Cmd Count (cumulative)",
+                      "0", String(invalidCmdCount),
                       "허용 명령: W/R/T/B/M. Beetle TX 배선 및 펌웨어 명령 포맷 확인");
+    }
+    return QCResult();
+  }
+};
+
+// ---------------------------------------------------------
+// [LOGIC_TAG_02] 태그 파싱 실패 누적 검사
+// ---------------------------------------------------------
+// PlayerDetector()에서 tag 길이 이상 또는 role 미해석 시 tagParseErrorCount가 증가합니다.
+// 누적 값을 보고합니다. ResetBeetleErrorCounters() 또는 UART 복구 후 초기화됩니다.
+class QCRule_TagParseError : public IQCRule {
+public:
+  String getId() const override { return "LOGIC_TAG_02"; }
+  String getName() const override { return "Tag Parse Error Check"; }
+  bool isFastCheck() const override { return false; }
+
+  QCResult check() override {
+    extern int tagParseErrorCount;
+    if (tagParseErrorCount > 0) {
+      return QCResult(QCLevel::WARN, getId(), "Tag Parse Errors (cumulative)",
+                      "0", String(tagParseErrorCount),
+                      "서버 태그 등록 확인, Beetle UART 배선 점검. "
+                      "role이 player/tagger 이외이면 서버 미등록 태그입니다.");
     }
     return QCResult();
   }

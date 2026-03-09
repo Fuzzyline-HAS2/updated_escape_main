@@ -34,6 +34,10 @@ void SettingFunc(void)
 
 }
 void ActivateFunc(void){
+    if (systemFaultLatched) {
+        Serial.println("[SAFE] ActivateFunc blocked: " + systemFaultReason);
+        return;
+    }
     Serial.println("ACTIVATE");
     myDFPlayer.playLargeFolder(1, VE1);
     AllNeoOn(YELLOW);
