@@ -270,14 +270,14 @@ public:
       return p ? String(p) : String("");
     };
 
-    // game_state 허용값: setting / ready / activate / ""
+    // game_state 허용값: setting / ready / activate / escape / ""
     if (my.containsKey("game_state")) {
       String gState = safeStr(my["game_state"]);
       bool gValid = (gState == "setting" || gState == "ready" ||
-                     gState == "activate" || gState == "");
+                     gState == "activate" || gState == "escape" || gState == "");
       if (!gValid) {
         return QCResult(QCLevel::WARN, getId(), "game_state",
-                        "setting/ready/activate", gState,
+                        "setting/ready/activate/escape", gState,
                         "서버 game_state 설정 확인");
       }
     }

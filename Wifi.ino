@@ -11,6 +11,11 @@ void DataChanged()
     else if((String)(const char*)my["game_state"] == "activate"){
         ActivateFunc();
     }
+    else if((String)(const char*)my["game_state"] == "escape"){
+        EscapeClose();
+        GameTimer.disable(gameTimerId);
+        ptrCurrentMode = WaitFunc;
+    }
   }
   if((String)(const char*)my["device_state"] != (String)(const char*)cur["device_state"]){
     if((String)(const char*)my["device_state"] == "player_win"){
