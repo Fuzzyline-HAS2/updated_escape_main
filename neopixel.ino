@@ -1,13 +1,23 @@
 void NeopixelInit()
 {
-  for (int i = 0; i < NeopixelNum; ++i)
+  for (int i = 0; i < NeopixelNum; ++i) {
     pixels[i].begin();
+    pixels[i].setBrightness(neoGlobalBrightness);
+  }
 
   for (int i = 0; i < NeopixelNum; ++i) {
     for (int j = 0; j < NumPixels[i]; j++)
       pixels[i].setPixelColor(j, pixels[i].Color(color[WHITE][0], color[WHITE][1], color[WHITE][2]));
     pixels[i].show();
   }
+}
+
+void ApplyBrightness(int serverVal) {
+    if (serverVal <= 0 || serverVal > 100) return; // 범위 벗어나면 디폴트 유지
+    neoGlobalBrightness = (uint8_t)((serverVal * 255) / 100);
+    for (int i = 0; i < NeopixelNum; ++i)
+        pixels[i].setBrightness(neoGlobalBrightness);
+    AllNeoOn(currentNeoColor); // 변경된 밝기로 현재 색상 재설정
 }
 
 void NeoBlink(int neo, int neoColor, int cnt, int blinkTime){
@@ -24,6 +34,7 @@ void NeoBlink(int neo, int neoColor, int cnt, int blinkTime){
 }
 
 void AllNeoOn(int neoColor){
+    currentNeoColor = neoColor;
     for (int i = 0; i < NeopixelNum; ++i) {
         for (int j = 0; j < NumPixels[i]; j++)
             pixels[i].setPixelColor(j, pixels[i].Color(color[neoColor][0], color[neoColor][1], color[neoColor][2]));

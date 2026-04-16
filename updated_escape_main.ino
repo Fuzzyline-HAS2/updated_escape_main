@@ -17,20 +17,7 @@ void setup() {
     Serial.begin(115200);
     toSubSerial.begin(115200, SERIAL_8N1, HWSERIAL_RX, HWSERIAL_TX);
 //    has2wifi.Setup("city");
-    has2wifi.Setup("badland_ruins", "Code3824@");
-    ota.setLogStream(Serial);
-    ota.setOnSuccess([]() {
-        for (int b = 0; b < 5; b++) {
-            AllNeoOn(RED);
-            delay(300);
-            AllNeoOn(BLACK);
-            delay(300);
-        }
-        has2wifi.Send((String)(const char*)my["device_name"], "device_state", "setting");
-    });
-    ota.setOnSkip([]() {
-        has2wifi.Send((String)(const char*)my["device_name"], "device_state", "setting");
-    });
+    has2wifi.Setup("city");
     NeopixelInit();
     TimerInit();
     Mp3_Setup();

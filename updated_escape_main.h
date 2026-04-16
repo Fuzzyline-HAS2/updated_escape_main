@@ -5,7 +5,7 @@
 #include "QC/QC_Engine.h"
 #include "QC/QC_Rules.h"
 //****************************************WIFI****************************************************************
-HAS2_Wifi has2wifi("http://172.30.1.43");
+HAS2_Wifi has2wifi("http://172.30.1.44");
 void DataChanged();
 void SettingFunc(void);
 void ActivateFunc(void);
@@ -68,6 +68,9 @@ enum { VE1 = 1, VE2, VE3, VE4, VE5 };
 //SETUP****************************************************************
 void NeopixelInit();
 void NeoBlink(int neo, int neoColor, int cnt, int blinkTime);
+void ApplyBrightness(int serverVal);
+int currentNeoColor = WHITE;
+uint8_t neoGlobalBrightness = 255; // 기본 밝기 (최대)
 const int NumPixels[3] = {16, 60, 10};
 const int NeopixelNum = 3;
 enum { LINE = 0, ROUND, ONBOARD };
