@@ -44,7 +44,7 @@ class TestTagCountLogic:
         """Send 명령의 key가 device_name인지 확인."""
         activated_sm.set_tags(True, True, True)
         activated_sm.tick_game_timer()
-        assert activated_sm.get_sent()[0]["key"] == "escape_main"
+        assert activated_sm.get_sent()[0]["key"] == "updated_escape_main"
 
     def test_escape_sends_only_once(self, activated_sm):
         """escape는 1번만 전송돼야 함."""

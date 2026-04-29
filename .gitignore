@@ -2,3 +2,9 @@ ArduinoOutput/
 .vs/
 __pycache__/
 *.pyc
+
+secrets.h
+scripts/secrets.py
+build/
+*.elf
+# update.bin, update.sig, version.txt 는 제외하지 않음 (기기가 다운로드해야 함)

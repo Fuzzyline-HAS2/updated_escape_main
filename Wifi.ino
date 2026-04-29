@@ -17,9 +17,8 @@ void DataChanged()
         ptrCurrentMode = WaitFunc;
     }
   }
-  if((int)my["brightness"] != (int)cur["brightness"]){
-    ApplyBrightness((int)my["brightness"]);
-  }
+  if (my["brightness"].as<int>() != cur["brightness"].as<int>())
+    UpdateBrightness();
   if((String)(const char*)my["device_state"] != (String)(const char*)cur["device_state"]){
     if((String)(const char*)my["device_state"] == "player_win"){
         AllNeoOn(BLUE);
@@ -39,7 +38,6 @@ void WaitFunc(){
 void SettingFunc(void)
 {
     Serial.println("SETTING");
-    ApplyBrightness((int)my["brightness"]);
     digitalWrite(RELAY_PIN, HIGH);
     AllNeoOn(WHITE);
     EscapeClose();
@@ -49,7 +47,6 @@ void SettingFunc(void)
 
 void ActivateFunc(void){
     Serial.println("ACTIVATE");
-    ApplyBrightness((int)my["brightness"]);
     myDFPlayer.playLargeFolder(1, VE1);
     AllNeoOn(YELLOW);
     EscapeOpen();
@@ -60,7 +57,6 @@ void ActivateFunc(void){
 
 void ReadyFunc(void){
     Serial.println("READY");
-    ApplyBrightness((int)my["brightness"]);
     digitalWrite(RELAY_PIN, HIGH);
     AllNeoOn(RED);
     EscapeClose();

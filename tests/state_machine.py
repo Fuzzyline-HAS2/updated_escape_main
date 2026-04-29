@@ -1,5 +1,5 @@
 """
-escape_main 소프트웨어 로직의 Python 시뮬레이션.
+updated_escape_main 소프트웨어 로직의 Python 시뮬레이션.
 Wifi.ino(DataChanged, SettingFunc, ActivateFunc, ReadyFunc)와
 Game_system.ino(TagCount)를 미러링합니다.
 error_recovery.ino(LatchSystemFault, ClearSystemFault, HandleRuntimeRecovery) 포함.
@@ -8,7 +8,7 @@ error_recovery.ino(LatchSystemFault, ClearSystemFault, HandleRuntimeRecovery) �
 
 
 class EscapeMainSM:
-    def __init__(self, device_name: str = "escape_main"):
+    def __init__(self, device_name: str = "updated_escape_main"):
         self.device_name = device_name
         self.game_state = ""
         self.device_state = ""

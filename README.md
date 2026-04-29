@@ -1,4 +1,4 @@
-# escape_main
+# updated_escape_main
 
 ESP32 기반 탈출장치 메인 컨트롤러입니다.
 
@@ -10,9 +10,9 @@ ESP32 기반 탈출장치 메인 컨트롤러입니다.
 ## 구조
 
 ```text
-escape_main/
-├── escape_main.ino           메인 setup / loop
-├── escape_main.h             전역 상태, recovery 선언
+updated_escape_main/
+├── updated_escape_main.ino           메인 setup / loop
+├── updated_escape_main.h             전역 상태, recovery 선언
 ├── error_recovery.ino        런타임 복구
 ├── Wifi.ino                  서버 상태 반영과 상태 전이
 ├── Game_system.ino           태그 집계 및 escape 처리
@@ -89,7 +89,7 @@ escape_main/
 
 ## 오류 복구
 
-복구 로직은 [`error_recovery.ino`](/c:/Users/ok/escape_main/error_recovery.ino) 에 있습니다.
+복구 로직은 [`error_recovery.ino`](/c:/Users/ok/updated_escape_main/error_recovery.ino) 에 있습니다.
 
 ### 1. Beetle UART 복구
 
@@ -157,15 +157,15 @@ python -m pytest tests -v -p no:cacheprovider
 
 ## 파일별 역할
 
-- [escape_main.ino](/c:/Users/ok/escape_main/escape_main.ino): 초기화와 QC 룰 등록
-- [escape_main.h](/c:/Users/ok/escape_main/escape_main.h): 전역 상태, recovery 선언
-- [error_recovery.ino](/c:/Users/ok/escape_main/error_recovery.ino): Beetle UART 복구
-- [Wifi.ino](/c:/Users/ok/escape_main/Wifi.ino): 상태 전이 처리
-- [Game_system.ino](/c:/Users/ok/escape_main/Game_system.ino): 태그 집계와 escape 처리
-- [serial_Communication.ino](/c:/Users/ok/escape_main/serial_Communication.ino): Beetle 이벤트 검증
-- [stepper_Motor.ino](/c:/Users/ok/escape_main/stepper_Motor.ino): EscapeOpen / EscapeClose
-- [QC/QC_Rules.h](/c:/Users/ok/escape_main/QC/QC_Rules.h): QC 탐지 규칙
-- [tests/test_recovery.py](/c:/Users/ok/escape_main/tests/test_recovery.py): recovery 검증
+- [updated_escape_main.ino](/c:/Users/ok/updated_escape_main/updated_escape_main.ino): 초기화와 QC 룰 등록
+- [updated_escape_main.h](/c:/Users/ok/updated_escape_main/updated_escape_main.h): 전역 상태, recovery 선언
+- [error_recovery.ino](/c:/Users/ok/updated_escape_main/error_recovery.ino): Beetle UART 복구
+- [Wifi.ino](/c:/Users/ok/updated_escape_main/Wifi.ino): 상태 전이 처리
+- [Game_system.ino](/c:/Users/ok/updated_escape_main/Game_system.ino): 태그 집계와 escape 처리
+- [serial_Communication.ino](/c:/Users/ok/updated_escape_main/serial_Communication.ino): Beetle 이벤트 검증
+- [stepper_Motor.ino](/c:/Users/ok/updated_escape_main/stepper_Motor.ino): EscapeOpen / EscapeClose
+- [QC/QC_Rules.h](/c:/Users/ok/updated_escape_main/QC/QC_Rules.h): QC 탐지 규칙
+- [tests/test_recovery.py](/c:/Users/ok/updated_escape_main/tests/test_recovery.py): recovery 검증
 
 ## 요약
 

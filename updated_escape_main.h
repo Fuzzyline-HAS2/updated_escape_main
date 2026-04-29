@@ -68,7 +68,10 @@ enum { VE1 = 1, VE2, VE3, VE4, VE5 };
 //SETUP****************************************************************
 void NeopixelInit();
 void NeoBlink(int neo, int neoColor, int cnt, int blinkTime);
-void ApplyBrightness(int serverVal);
+void AllNeoOn(int neoColor);
+void UpdateBrightness();
+#define DEFAULT_BRIGHTNESS 50
+int ledBrightness = DEFAULT_BRIGHTNESS;
 enum { LINE = 0, ROUND, ONBOARD };
 enum {
   WHITE = 0,
@@ -84,21 +87,20 @@ enum {
   BLUE3
 };
 int currentNeoColor = WHITE;
-uint8_t neoGlobalBrightness = 255; // 기본 밝기 (최대)
 const int NumPixels[3] = {16, 60, 10};
 const int NeopixelNum = 3;
 // Neopixel 색상정보
-int color[11][3] = {{20, 20, 20}, // WHITE
-                    {40, 0, 0},   // RED
-                    {40, 40, 0},  // YELLOW
-                    {0, 40, 0},   // GREEN
-                    {0, 0, 40},   // BLUE
-                    {40, 0, 40},  // PURPLE
-                    {0, 0, 0},    // BLACK
-                    {0, 0, 20},   // ENCODERBLUE0
-                    {0, 0, 40},   // ENCODERBLUE1
-                    {0, 0, 60},   // ENCODERBLUE2
-                    {0, 0, 80}};  // ENCODERBLUE3
+int color[11][3] = {{255, 255, 255}, // WHITE
+                    {255, 0,   0  }, // RED
+                    {255, 255, 0  }, // YELLOW
+                    {0,   255, 0  }, // GREEN
+                    {0,   0,   255}, // BLUE
+                    {255, 0,   255}, // PURPLE
+                    {0,   0,   0  }, // BLACK
+                    {0,   0,   64 }, // ENCODERBLUE0
+                    {0,   0,   128}, // ENCODERBLUE1
+                    {0,   0,   192}, // ENCODERBLUE2
+                    {0,   0,   255}}; // ENCODERBLUE3
 
 const int neopixel_num = 3; // 설치된 네오픽셀의 개수
 

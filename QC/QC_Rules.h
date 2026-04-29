@@ -254,7 +254,7 @@ public:
 // [LOGIC_STATE_01] 게임 상태값 유효성 체크
 // ---------------------------------------------------------
 // 서버에서 받아온 my JSON의 game_state, device_state가
-// escape_main에서 허용된 값인지 확인합니다.
+// updated_escape_main에서 허용된 값인지 확인합니다.
 // 알 수 없는 상태값이 내려오면 서버 설정 오류 또는 로직 버그입니다.
 class QCRule_GameState : public IQCRule {
 public:

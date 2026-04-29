@@ -1,23 +1,23 @@
+void UpdateBrightness() {
+    int serverBrightness = my["brightness"].as<int>();
+    if (serverBrightness <= 0 || serverBrightness > 100) {
+        ledBrightness = DEFAULT_BRIGHTNESS;
+    } else {
+        ledBrightness = map(serverBrightness, 1, 100, 1, 255);
+    }
+    for (int i = 0; i < NeopixelNum; ++i)
+        pixels[i].setBrightness(ledBrightness);
+    AllNeoOn(currentNeoColor);
+}
+
 void NeopixelInit()
 {
   for (int i = 0; i < NeopixelNum; ++i) {
     pixels[i].begin();
-    pixels[i].setBrightness(neoGlobalBrightness);
+    pixels[i].setBrightness(ledBrightness);
   }
-
-  for (int i = 0; i < NeopixelNum; ++i) {
-    for (int j = 0; j < NumPixels[i]; j++)
-      pixels[i].setPixelColor(j, pixels[i].Color(color[WHITE][0], color[WHITE][1], color[WHITE][2]));
-    pixels[i].show();
-  }
-}
-
-void ApplyBrightness(int serverVal) {
-    if (serverVal <= 0 || serverVal > 100) return; // 범위 벗어나면 디폴트 유지
-    neoGlobalBrightness = (uint8_t)((serverVal * 255) / 100);
-    for (int i = 0; i < NeopixelNum; ++i)
-        pixels[i].setBrightness(neoGlobalBrightness);
-    AllNeoOn(currentNeoColor); // 변경된 밝기로 현재 색상 재설정
+  for (int i = 0; i < NeopixelNum; ++i)
+    AllNeoOn(WHITE);
 }
 
 void NeoBlink(int neo, int neoColor, int cnt, int blinkTime){

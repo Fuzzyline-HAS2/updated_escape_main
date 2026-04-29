@@ -8,6 +8,8 @@
 #include "DFRobotDFPlayerMini.h"
 #include <HAS2_Wifi.h>
 #include <SimpleTimer.h>
+#include <SecureOTA.h>
+#include "secrets.h"
 
 #define DFPLAYER_RX_PIN 39
 #define DFPLAYER_TX_PIN 33

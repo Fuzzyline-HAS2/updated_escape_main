@@ -6,7 +6,7 @@ HAS2_Wifi Mock Server - has2.php 동작을 흉내냅니다.
     python mock_server.py
 
 ESP32에서 서버 주소를 PC IP로 변경:
-    escape_main.h: HAS2_Wifi has2wifi("http://<PC_IP>:5000");
+    updated_escape_main.h: HAS2_Wifi has2wifi("http://<PC_IP>:5000");
 """
 
 from flask import Flask, request, jsonify
@@ -17,12 +17,12 @@ app = Flask(__name__)
 # ── 인메모리 상태 DB ──────────────────────────────────────────────────────────
 
 _devices: dict = {
-    "escape_main": {
-        "device_name": "escape_main",
+    "updated_escape_main": {
+        "device_name": "updated_escape_main",
         "game_state": "setting",
         "device_state": "setting",
         "manage_state": "mu",
-        "device_type": "escape_main",
+        "device_type": "updated_escape_main",
         "watchdog": 0,
     }
 }
@@ -64,7 +64,7 @@ def has2_php():
 def set_state():
     """테스트에서 디바이스 상태를 직접 설정."""
     data = request.json
-    device = data.get("device", "escape_main")
+    device = data.get("device", "updated_escape_main")
     if device in _devices:
         _devices[device].update(data.get("state", {}))
     return jsonify({"ok": True})
@@ -72,7 +72,7 @@ def set_state():
 @app.route("/test/get_device")
 def get_device():
     """현재 디바이스 상태 조회."""
-    device = request.args.get("device", "escape_main")
+    device = request.args.get("device", "updated_escape_main")
     return jsonify(_devices.get(device, {}))
 
 @app.route("/test/set_tag", methods=["POST"])
