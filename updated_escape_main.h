@@ -4,6 +4,24 @@
 #include "Library_and_pin.h"
 #include "QC/QC_Engine.h"
 #include "QC/QC_Rules.h"
+#include <WiFi.h>
+
+class TelnetDebugConsole : public Stream {
+public:
+  void begin(unsigned long baud);
+  int available() override;
+  int read() override;
+  int peek() override;
+  void flush() override;
+  size_t write(uint8_t data) override;
+  size_t write(const uint8_t *buffer, size_t size) override;
+};
+
+extern HardwareSerial HardwareDebugSerial;
+extern TelnetDebugConsole DebugSerial;
+
+#define Serial DebugSerial
+
 //****************************************WIFI****************************************************************
 HAS2_Wifi has2wifi("http://172.30.1.44");
 SecureOTA ota(

@@ -25,6 +25,7 @@ void setup() {
     ota.setOnSkip([]() {
         Serial.println("[OTA] 이미 최신 버전입니다.");
     });
+    TelnetInit();
     NeopixelInit();
     TimerInit();
     Mp3_Setup();
@@ -60,6 +61,7 @@ void setup() {
     // qc.addRule(new QCRule_OutputInitSafety());   // HW_GPIO_02
 }
 void loop() {
+    TelnetRun();
     WifiTimer.run();
     GameTimer.run();
     //QCEngine::getInstance().tick();
