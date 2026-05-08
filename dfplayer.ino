@@ -6,10 +6,8 @@ void Mp3_Setup(){
   myDFPlayer.setTimeOut(1000);
   if (!myDFPlayer.begin(MP3Serial)) {
     Serial.println("[DFPlayer] 연결 실패 — SD카드/연결선 확인 필요. 그냥 진행.");
-    dfPlayerOk = false;
-    return; // 이후 설정 모두 건너뛰
+    return;
   }
-  dfPlayerOk = true;
   Serial.println(F("DFPlayer Mini online."));
   myDFPlayer.setTimeOut(500);
   myDFPlayer.volume(30);       // 0~30
