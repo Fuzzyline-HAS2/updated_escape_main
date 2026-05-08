@@ -1,4 +1,4 @@
- ;/**
+ /**
  * @file Done_Escape_Main_code.ino
  * @author 김병준 (you@domain.com)
  * @brief
