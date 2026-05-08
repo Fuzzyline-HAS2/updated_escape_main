@@ -12,7 +12,9 @@ void DataChanged()
         ReadyFunc();
     }
     else if((String)(const char*)my["game_state"] == "activate"){
-        ActivateFunc();
+        if((String)(const char*)my["device_state"] != "fake"){
+            ActivateFunc();
+        }
     }
     else if((String)(const char*)my["game_state"] == "escape"){
         EscapeClose();
