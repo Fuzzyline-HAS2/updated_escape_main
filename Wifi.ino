@@ -33,6 +33,11 @@ void DataChanged()
         AllNeoOn(PURPLE);
         EscapeClose();
     }
+    else if((String)(const char*)my["device_state"] == "activate"){
+        if((String)(const char*)my["game_state"] == "activate"){
+            ActivateFunc();
+        }
+    }
     else if((String)(const char*)my["device_state"] == "github"){
         Serial.println("[OTA] OTA 업데이트 요청 수신");
         ota.check();
