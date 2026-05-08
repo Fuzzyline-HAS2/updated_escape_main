@@ -6,6 +6,13 @@
 #include "QC/QC_Rules.h"
 //****************************************WIFI****************************************************************
 HAS2_Wifi has2wifi("http://172.30.1.44");
+SecureOTA ota(
+    "https://raw.githubusercontent.com/Fuzzyline-HAS2/updated_escape_main/main/update.bin",
+    "https://raw.githubusercontent.com/Fuzzyline-HAS2/updated_escape_main/main/version.txt",
+    "https://raw.githubusercontent.com/Fuzzyline-HAS2/updated_escape_main/main/update.sig",
+    HMAC_SECRET,
+    FIRMWARE_VER
+);
 void DataChanged();
 void SettingFunc(void);
 void ActivateFunc(void);
