@@ -7,9 +7,9 @@
 //****************************************WIFI****************************************************************
 HAS2_Wifi has2wifi("http://172.30.1.44");
 SecureOTA ota(
-    "https://raw.githubusercontent.com/Fuzzyline-HAS2/updated_escape_main/main/update.bin",
-    "https://raw.githubusercontent.com/Fuzzyline-HAS2/updated_escape_main/main/version.txt",
-    "https://raw.githubusercontent.com/Fuzzyline-HAS2/updated_escape_main/main/update.sig",
+    "https://raw.githubusercontent.com/Fuzzyline-HAS2/updated_escape_main/third_store/update.bin",
+    "https://raw.githubusercontent.com/Fuzzyline-HAS2/updated_escape_main/third_store/version.txt",
+    "https://raw.githubusercontent.com/Fuzzyline-HAS2/updated_escape_main/third_store/update.sig",
     HMAC_SECRET,
     FIRMWARE_VER
 );
