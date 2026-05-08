@@ -18,12 +18,12 @@ void setup() {
     toSubSerial.begin(115200, SERIAL_8N1, HWSERIAL_RX, HWSERIAL_TX);
 //    has2wifi.Setup("city");
     has2wifi.Setup("badland_ruins", "Code3824@");
-    ota.setLogStream(Serial);
+    ota.setLogStream(DebugSerial);
     ota.setOnSuccess([]() {
-        Serial.println("[OTA] 업데이트 성공! 재부팅합니다...");
+        has2wifi.Send((String)(const char*)my["device_name"], "device_state", "setting");
     });
     ota.setOnSkip([]() {
-        Serial.println("[OTA] 이미 최신 버전입니다.");
+        has2wifi.Send((String)(const char*)my["device_name"], "device_state", "setting");
     });
     TelnetInit();
     NeopixelInit();
