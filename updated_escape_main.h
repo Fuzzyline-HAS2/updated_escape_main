@@ -1,4 +1,4 @@
-#ifndef _DONE_ESCAPE_MAIN_CODE_
+﻿#ifndef _DONE_ESCAPE_MAIN_CODE_
 #define _DONE_ESCAPE_MAIN_CODE_
 
 #include "Library_and_pin.h"
@@ -23,7 +23,7 @@ extern TelnetDebugConsole DebugSerial;
 #define Serial DebugSerial
 
 //****************************************WIFI****************************************************************
-HAS2_Wifi has2wifi("http://172.30.1.43");
+HAS2_Wifi has2wifi("http://172.30.1.1");
 SecureOTA ota(
     "https://raw.githubusercontent.com/Fuzzyline-HAS2/updated_escape_main/third_store/update.bin",
     "https://raw.githubusercontent.com/Fuzzyline-HAS2/updated_escape_main/third_store/version.txt",
