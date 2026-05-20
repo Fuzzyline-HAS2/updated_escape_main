@@ -61,7 +61,7 @@ void SettingFunc(void)
 
 void ActivateFunc(void){
     Serial.println("ACTIVATE");
-    myDFPlayer.playLargeFolder(1, VE1);
+    Mp3PlayLargeFolder(1, VE1);
     AllNeoOn(YELLOW);
     EscapeOpen();
     GameTimer.enable(gameTimerId);

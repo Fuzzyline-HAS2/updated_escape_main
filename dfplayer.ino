@@ -13,4 +13,14 @@ void Mp3_Setup(){
   myDFPlayer.volume(30);       // 0~30
   myDFPlayer.EQ(DFPLAYER_EQ_NORMAL);
   myDFPlayer.outputDevice(DFPLAYER_DEVICE_SD);
-}//void MP3_SETUP
+}//void MP3_SETUP
+
+void Mp3PlayLargeFolder(uint8_t folder_number, uint16_t file_number)
+{
+  const char* lang = (const char *)shift_machine["selected_language"];
+  if (lang != nullptr && String(lang) == "EN")
+  {
+    folder_number += 1;
+  }
+  myDFPlayer.playLargeFolder(folder_number, file_number);
+}
