@@ -10,6 +10,7 @@
  */
 
 #define FIRMWARE_VER 13
+#define PARTITION_VER 1
 #include "updated_escape_main.h"
 
 void setup() {
@@ -25,6 +26,12 @@ void setup() {
     ota.setOnSkip([]() {
         has2wifi.Send((String)(const char*)my["device_name"], "device_state", "setting");
     });
+    ota.setPartitionUpdate(
+        "https://raw.githubusercontent.com/Fuzzyline-HAS2/updated_escape_main/third_store/partitions.bin",
+        "https://raw.githubusercontent.com/Fuzzyline-HAS2/updated_escape_main/third_store/partitions.sig",
+        "https://raw.githubusercontent.com/Fuzzyline-HAS2/updated_escape_main/third_store/partition_version.txt",
+        PARTITION_VER
+    );
     TelnetInit();
     NeopixelInit();
     TimerInit();
