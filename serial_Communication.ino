@@ -49,6 +49,7 @@ void CommnunicationBeetle(){
 
       // 유효 패킷 처리 성공 → bad event 카운터 초기화
       ResetBeetleErrorCounters();
+      has2wifi.Send((String)(const char*)my["device_name"], "tag_players", command);
     }
     else if(cmd == 'B'){
       Serial.println(command);
