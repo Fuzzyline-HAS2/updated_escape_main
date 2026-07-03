@@ -9,7 +9,7 @@
  *
  */
 
-#define FIRMWARE_VER 16
+#define FIRMWARE_VER 17
 #define PARTITION_VER 1
 #include "updated_escape_main.h"
 
