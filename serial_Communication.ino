@@ -49,7 +49,29 @@ void CommnunicationBeetle(){
 
       // 유효 패킷 처리 성공 → bad event 카운터 초기화
       ResetBeetleErrorCounters();
-      has2wifi.Send((String)(const char*)my["device_name"], "tag_players", command);
+
+      // --- 진단: tagged_players를 직접 HTTP GET으로 보내 서버 응답(코드+본문) 확인 ---
+      // has2wifi.Send()는 void라 응답을 못 돌려줌. HttpRequest와 동일한 URL을 직접
+      // 만들어 보내고 상태코드/본문을 대놓고 찍는다. 라벨은 콘솔 한글깨짐 방지로 ASCII만.
+      {
+        // 태그 코드만 '_' 로 join → URL-safe(영숫자+언더바)라 인코딩 불필요.
+        // 예: "G1P1_GxP0_GxP0". 서버는 explode("_", value) 로 배열 파싱.
+        String tagValue = tag1 + "_" + tag2 + "_" + tag3;
+        String diagUrl =
+            "http://172.30.1.43/has2.php?request=Send&table=device&key=" +
+            (String)(const char*)my["device_name"] +
+            "&column=tagged_players&value=" + tagValue;
+        Serial.println("[DIAG] wifi=" +
+                       String(WiFi.status() == WL_CONNECTED ? "OK" : "DOWN") +
+                       " GET " + diagUrl);
+        HTTPClient diagHttp;
+        diagHttp.begin(diagUrl);
+        int diagCode = diagHttp.GET();
+        String diagBody = diagHttp.getString();
+        diagHttp.end();
+        Serial.println("[DIAG] code=" + String(diagCode) +
+                       " body=[" + diagBody + "]");
+      }
     }
     else if(cmd == 'B'){
       Serial.println(command);
