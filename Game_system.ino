@@ -7,12 +7,10 @@ void TagCount(){
     if(tagCnt == 1){
         Serial.println("Tag 1 detected");
         Mp3PlayLargeFolder(1, VE2);
-        delay(1500);
     }
     else if(tagCnt == 2){
         Serial.println("Tag 2 detected");
         Mp3PlayLargeFolder(1, VE3);
-        delay(1500);
     }
     else if(tagCnt >= 3){
         Serial.println("Escape Activate");
@@ -21,7 +19,7 @@ void TagCount(){
         EscapeClose();
         GameTimer.disable(gameTimerId);
         ptrCurrentMode = WaitFunc;
-        delay(5000);
+        delay(3000);
         Mp3PlayLargeFolder(1, VE5);
     }
 
