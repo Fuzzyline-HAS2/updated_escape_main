@@ -51,6 +51,11 @@ String tag1;
 String tag2;
 String tag3;
 bool tagState[3] = {false, false, false};
+// tagged_players 서버 전송은 오디오 재생과 무관하므로, 태그 감지 직후 즉시 보내지
+// 않고 TagCount()(오디오 재생) 이후로 미뤄서 오디오까지의 텀에서 HTTP 왕복 1회를 뺀다.
+bool tagValuePending = false;
+String pendingTagValue = "";
+void FlushPendingTagSend();
 //****************************************Game
 //System****************************************************************
 int tagCnt = 0;

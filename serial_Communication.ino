@@ -50,34 +50,30 @@ void CommnunicationBeetle(){
       // 유효 패킷 처리 성공 → bad event 카운터 초기화
       ResetBeetleErrorCounters();
 
-      // --- 진단: tagged_players를 직접 HTTP GET으로 보내 서버 응답(코드+본문) 확인 ---
-      // has2wifi.Send()는 void라 응답을 못 돌려줌. HttpRequest와 동일한 URL을 직접
-      // 만들어 보내고 상태코드/본문을 대놓고 찍는다. 라벨은 콘솔 한글깨짐 방지로 ASCII만.
-      {
-        // 태그 코드만 '_' 로 join → URL-safe(영숫자+언더바)라 인코딩 불필요.
-        // 예: "G1P1_GxP0_GxP0". 서버는 explode("_", value) 로 배열 파싱.
-        String tagValue = tag1 + "_" + tag2 + "_" + tag3;
-        String diagUrl =
-            "http://172.30.1.43/has2.php?request=Send&table=device&key=" +
-            (String)(const char*)my["device_name"] +
-            "&column=tagged_players&value=" + tagValue;
-        Serial.println("[DIAG] wifi=" +
-                       String(WiFi.status() == WL_CONNECTED ? "OK" : "DOWN") +
-                       " GET " + diagUrl);
-        HTTPClient diagHttp;
-        diagHttp.begin(diagUrl);
-        int diagCode = diagHttp.GET();
-        String diagBody = diagHttp.getString();
-        diagHttp.end();
-        Serial.println("[DIAG] code=" + String(diagCode) +
-                       " body=[" + diagBody + "]");
+      // 태그 코드만 '_' 로 join → URL-safe(영숫자+언더바)라 인코딩 불필요.
+      // 예: "G1P1_GxP0_GxP0". 서버는 explode("_", value) 로 배열 파싱.
+      // 3개 다 "GxP0"(미검출)면 매 루프 동일값 재전송이라 스팸이므로 스킵하고,
+      // 하나라도 실제 태그(마지막 자리 != '0')면 전송한다.
+      // 여기서 바로 Send(HTTP 왕복)하면 오디오 재생(TagCount)이 그만큼 늦어지므로
+      // 값만 보관해두고 실제 전송은 오디오가 나간 뒤 FlushPendingTagSend()에서 한다.
+      bool hasMeaningfulTag = (tag1[3] != '0') || (tag2[3] != '0') || (tag3[3] != '0');
+      if (hasMeaningfulTag) {
+        pendingTagValue = tag1 + "_" + tag2 + "_" + tag3;
+        tagValuePending = true;
       }
     }
     else if(cmd == 'B'){
       Serial.println(command);
     }
     else if(cmd == 'M'){
-      ESP.restart();
+      static bool escapeIsOpen = false;
+      if(escapeIsOpen){
+        EscapeClose();
+        escapeIsOpen = false;
+      } else {
+        EscapeOpen();
+        escapeIsOpen = true;
+      }
     }
     else {
       // 허용되지 않은 명령 문자
@@ -88,6 +84,12 @@ void CommnunicationBeetle(){
   while(toSubSerial.available()){
     toSubSerial.read();
   }
+}
+
+void FlushPendingTagSend(){
+  if (!tagValuePending) return;
+  tagValuePending = false;
+  has2wifi.Send((String)(const char*)my["device_name"], "tagged_players", pendingTagValue);
 }
 
 bool PlayerDetector(String playerNum)
