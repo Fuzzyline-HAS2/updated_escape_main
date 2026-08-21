@@ -94,6 +94,8 @@ void FakeTagCheck(){
     if (tagNow && !fakeTagPresent) {
         Serial.println("[FAKE/TAGGER] Tag detected -> playLargeFolder(1, " + String(fakeTagTrack) + ")");
         myDFPlayer.playLargeFolder(1, fakeTagTrack);
+        AllNeoBlink(PURPLE, 3, 300); // 안내 오디오 재생 중 보라색 점멸 (사용 불가 알림)
+        AllNeoOn(PURPLE);           // 점멸 종료 후 평소 상태(보라색 고정)로 복귀
     }
     fakeTagPresent = tagNow;
 }

@@ -33,6 +33,26 @@ void NeoBlink(int neo, int neoColor, int cnt, int blinkTime){
     }
 }
 
+// NeoBlink()를 3개 스트립 전체에 동시 적용한 버전. 특정 스트립 하나만 순서대로
+// 깜빡이면 전체가 깜빡이는 데 3배 시간이 걸려 부자연스러우므로, 모든 픽셀을
+// 같은 타이밍에 켜고/끈다.
+void AllNeoBlink(int neoColor, int cnt, int blinkTime){
+    for(int i = 0; i < cnt; i++){
+        for (int n = 0; n < NeopixelNum; ++n)
+            for(int j = 0; j < NumPixels[n]; j++)
+                pixels[n].setPixelColor(j, pixels[n].Color(color[BLACK][0], color[BLACK][1], color[BLACK][2]));
+        for (int n = 0; n < NeopixelNum; ++n)
+            pixels[n].show();
+        delay(blinkTime);
+        for (int n = 0; n < NeopixelNum; ++n)
+            for(int j = 0; j < NumPixels[n]; j++)
+                pixels[n].setPixelColor(j, pixels[n].Color(color[neoColor][0], color[neoColor][1], color[neoColor][2]));
+        for (int n = 0; n < NeopixelNum; ++n)
+            pixels[n].show();
+        delay(blinkTime);
+    }
+}
+
 void AllNeoOn(int neoColor){
     currentNeoColor = neoColor;
     for (int i = 0; i < NeopixelNum; ++i) {
