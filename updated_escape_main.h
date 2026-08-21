@@ -20,6 +20,12 @@ void ReadyFunc(void);
 void WaitFunc();
 void WifiIntervalLoop(unsigned long intervalValue);
 unsigned long wifiInterval = 0;
+//****************************************Fake/Tagger
+//Device****************************************************************
+void FakeDeviceFunc(int tagTrack); // "fake"(가짜 탈출장치) / "tagger"(봉쇄된 탈출장치) 진입 공용 처리
+void FakeTagCheck();               // PN532 태그 물리 감지 시 안내 오디오 1회 재생 (엣지 트리거)
+int fakeTagTrack = 8;              // 8 = fake 안내, 9 = tagger 안내
+bool fakeTagPresent = false;       // 직전 폴링에서 태그가 있었는지 (엣지 감지용)
 //****************************************Pointer
 //System****************************************************************
 void (*ptrCurrentMode)(); // 현재모드 저장용 포인터 함수

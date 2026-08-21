@@ -282,16 +282,17 @@ public:
       }
     }
 
-    // device_state 허용값: setting / activate / ready / escape / player_win / player_lose / ""
+    // device_state 허용값: setting / activate / ready / escape / player_win / player_lose / fake / tagger / github / ""
     if (my.containsKey("device_state")) {
       String dState = safeStr(my["device_state"]);
       bool dValid = (dState == "setting" || dState == "activate" ||
                      dState == "ready" || dState == "escape" ||
                      dState == "player_win" || dState == "player_lose" ||
-                     dState == "");
+                     dState == "fake" || dState == "tagger" ||
+                     dState == "github" || dState == "");
       if (!dValid) {
         return QCResult(QCLevel::WARN, getId(), "device_state",
-                        "setting/activate/ready/escape/player_win/player_lose", dState,
+                        "setting/activate/ready/escape/player_win/player_lose/fake/tagger/github", dState,
                         "서버 device_state 설정 확인");
       }
     }
