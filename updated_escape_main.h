@@ -70,6 +70,7 @@ int gameTimerId;
 HardwareSerial MP3Serial(2);
 DFRobotDFPlayerMini myDFPlayer;
 void Mp3_Setup();
+bool dfPlayerOk = false;
 enum { VE1 = 1, VE2, VE3, VE4, VE5 };
 //****************************************Neopixel
 //SETUP****************************************************************
