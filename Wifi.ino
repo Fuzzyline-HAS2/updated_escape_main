@@ -42,7 +42,10 @@ void DataChanged()
         FakeDeviceFunc(8);
     }
     else if (deviceState == "activate"){
-        ActivateFunc(); // fake/tagger 상태 해제 후 정상 게임(탈출장치 열림)으로 복귀
+        // game_state가 실제로 activate인 경우에만 복귀 (third_store 브랜치의 검증된 이중 안전장치와 동일)
+        if (gameState == "activate"){
+            ActivateFunc(); // fake/tagger 상태 해제 후 정상 게임(탈출장치 열림)으로 복귀
+        }
     }
     else if (deviceState == "github"){
         Serial.println("[OTA] OTA 업데이트 요청 수신");
@@ -68,7 +71,6 @@ void SettingFunc(void)
 void ActivateFunc(void){
     Serial.println("ACTIVATE");
     myDFPlayer.playLargeFolder(1, VE1);
-    delay(1000); // 모터(EscapeOpen) 기동 러시전류로 DFPlayer의 SD 재생이 끊기는 것 방지
     AllNeoOn(YELLOW);
     EscapeOpen();
     GameTimer.enable(gameTimerId);
@@ -116,7 +118,6 @@ void FakeTagCheck(){
     if (tagNow && !fakeTagPresent) {
         Serial.println("[FAKE/TAGGER] Tag detected -> playLargeFolder(1, " + String(fakeTagTrack) + ")");
         myDFPlayer.playLargeFolder(1, fakeTagTrack);
-        delay(1000); // 네오픽셀 대량 점멸 전류로 DFPlayer의 SD 재생이 끊기는 것 방지
         AllNeoBlink(PURPLE, 3, 300); // 안내 오디오 재생 중 보라색 점멸 (사용 불가 알림)
         AllNeoOn(PURPLE);           // 점멸 종료 후 평소 상태(보라색 고정)로 복귀
     }
