@@ -21,9 +21,11 @@ void setup() {
     ota.setLogStream(Serial);
     ota.setOnSuccess([]() {
         Serial.println("[OTA] 업데이트 성공! 재부팅합니다...");
+        SendDeviceStateWithRetry("setting");
     });
     ota.setOnSkip([]() {
         Serial.println("[OTA] 이미 최신 버전입니다.");
+        SendDeviceStateWithRetry("setting");
     });
     NeopixelInit();
     TimerInit();
