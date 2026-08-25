@@ -107,14 +107,14 @@ bool PlayerDetector(String playerNum)
   has2wifi.Receive(playerNum);
   String role = (String)(const char*)tag["role"];
 
-  // fake/tagger(디코이) 상태에서는 생존자/부활 태그가 찍히면 전용 오디오만 재생한다.
+  // fake/tagger(디코이) 상태에서는 누가(player/ghost/revival) 찍히든 전용 오디오만 재생한다.
+  // 어떤 오디오인지는 태그한 사람의 role이 아니라 이 장치 자신의 device_state로 결정:
+  // tagger 상태면 (1,7), fake 상태면 (1,8).
   String deviceState = (String)(const char*)my["device_state"];
   if (deviceState == "fake" || deviceState == "tagger") {
-    if (role == "survivor") {
-      Mp3PlayLargeFolder(1, 7);
-      return false;
-    } else if (role == "revival") {
-      Mp3PlayLargeFolder(1, 8);
+    if (role == "player" || role == "ghost" || role == "revival") {
+      Mp3PlayLargeFolder(1, deviceState == "tagger" ? 7 : 8);
+      AllNeoBlink(PURPLE, 3, 150);
       return false;
     }
   }

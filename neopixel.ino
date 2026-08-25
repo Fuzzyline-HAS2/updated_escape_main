@@ -33,6 +33,23 @@ void NeoBlink(int neo, int neoColor, int cnt, int blinkTime){
     }
 }
 
+void AllNeoBlink(int neoColor, int cnt, int blinkTime){
+    for(int i = 0; i < cnt; i++){
+        for (int n = 0; n < NeopixelNum; ++n) {
+            for(int j = 0; j < NumPixels[n]; j++)
+                pixels[n].setPixelColor(j, pixels[n].Color(color[BLACK][0], color[BLACK][1], color[BLACK][2]));
+            pixels[n].show();
+        }
+        delay(blinkTime);
+        for (int n = 0; n < NeopixelNum; ++n) {
+            for(int j = 0; j < NumPixels[n]; j++)
+                pixels[n].setPixelColor(j, pixels[n].Color(color[neoColor][0], color[neoColor][1], color[neoColor][2]));
+            pixels[n].show();
+        }
+        delay(blinkTime);
+    }
+}
+
 void AllNeoOn(int neoColor){
     currentNeoColor = neoColor;
     for (int i = 0; i < NeopixelNum; ++i) {

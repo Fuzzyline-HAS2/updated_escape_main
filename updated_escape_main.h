@@ -98,6 +98,7 @@ enum { VE1 = 1, VE2, VE3, VE4, VE5 };
 //SETUP****************************************************************
 void NeopixelInit();
 void NeoBlink(int neo, int neoColor, int cnt, int blinkTime);
+void AllNeoBlink(int neoColor, int cnt, int blinkTime);
 void AllNeoOn(int neoColor);
 void UpdateBrightness();
 #define DEFAULT_BRIGHTNESS 50
