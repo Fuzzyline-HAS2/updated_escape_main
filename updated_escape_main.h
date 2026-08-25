@@ -72,6 +72,7 @@ void HandleRuntimeRecovery();
 void RecoverBeetleConnection();
 void ResetBeetleErrorCounters();
 bool SendDeviceStateWithRetry(const String& value, uint8_t retries = 3);
+bool ClearGithubOtaState();
 //****************************************Step
 //Motor****************************************************************
 void StepMotorInit();

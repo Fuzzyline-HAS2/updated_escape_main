@@ -105,3 +105,36 @@ bool SendDeviceStateWithRetry(const String &value, uint8_t retries) {
                  "' all retries failed.");
   return false;
 }
+
+// ---------------------------------------------------------
+// ClearGithubOtaState: OTA 성공/스킵 직후 device_state를 "github"에서
+// 빼내고 서버에 실제로 반영됐는지 읽어서 확인한다.
+// has2wifi.Send()는 반환값이 없어 HTTP 실패를 알 수 없고,
+// 그 상태로 재부팅하면 device_state가 여전히 "github"로 남아
+// 다음 부팅 때 DataChanged()가 다시 ota.check()를 트리거해
+// 무한 OTA 재시도 루프에 빠진다. 그래서 Send 후 ReceiveMine()으로
+// 읽어와 값이 실제로 바뀌었는지 확인하고, 안 바뀌었으면 재시도한다.
+// ---------------------------------------------------------
+bool ClearGithubOtaState() {
+  for (uint8_t i = 0; i < 5; i++) {
+    if (WiFi.status() != WL_CONNECTED) {
+      Serial.println("[OTA] WARN: device_state=setting 전송 시도 " +
+                     String(i + 1) + " 스킵 (WiFi 미연결)");
+      delay(300);
+      continue;
+    }
+    has2wifi.Send((String)(const char *)my["device_name"], "device_state", "setting");
+    delay(300);
+    has2wifi.ReceiveMine();
+    if ((String)(const char *)my["device_state"] != "github") {
+      Serial.println("[OTA] device_state=setting 반영 확인 완료 (시도 " +
+                     String(i + 1) + ")");
+      return true;
+    }
+    Serial.println("[OTA] WARN: device_state 아직 github, 재시도 " +
+                   String(i + 1) + "/5");
+  }
+  Serial.println("[OTA] WARN: device_state=setting 반영 실패 — "
+                 "재부팅 시 github 무한루프 위험");
+  return false;
+}

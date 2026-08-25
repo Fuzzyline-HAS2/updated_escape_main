@@ -21,10 +21,10 @@ void setup() {
     has2wifi.Setup("bdaland");
     ota.setLogStream(DebugSerial);
     ota.setOnSuccess([]() {
-        has2wifi.Send((String)(const char*)my["device_name"], "device_state", "setting");
+        ClearGithubOtaState();
     });
     ota.setOnSkip([]() {
-        has2wifi.Send((String)(const char*)my["device_name"], "device_state", "setting");
+        ClearGithubOtaState();
     });
     ota.setPartitionUpdate(
         "https://raw.githubusercontent.com/Fuzzyline-HAS2/updated_escape_main/third_store/partitions.bin",
