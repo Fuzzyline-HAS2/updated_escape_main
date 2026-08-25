@@ -12,7 +12,7 @@ void DataChanged()
         ReadyFunc();
     }
     else if((String)(const char*)my["game_state"] == "activate"){
-        if((String)(const char*)my["device_state"] != "fake"){
+        if((String)(const char*)my["device_state"] != "fake" && (String)(const char*)my["device_state"] != "tagger"){
             ActivateFunc();
         }
     }
@@ -30,6 +30,10 @@ void DataChanged()
         EscapeClose();
     }
     else if((String)(const char*)my["device_state"] == "fake"){
+        AllNeoOn(PURPLE);
+        EscapeClose();
+    }
+    else if((String)(const char*)my["device_state"] == "tagger"){
         AllNeoOn(PURPLE);
         EscapeClose();
     }

@@ -107,6 +107,18 @@ bool PlayerDetector(String playerNum)
   has2wifi.Receive(playerNum);
   String role = (String)(const char*)tag["role"];
 
+  // fake/tagger(디코이) 상태에서는 생존자/부활 태그가 찍히면 전용 오디오만 재생한다.
+  String deviceState = (String)(const char*)my["device_state"];
+  if (deviceState == "fake" || deviceState == "tagger") {
+    if (role == "survivor") {
+      Mp3PlayLargeFolder(1, 7);
+      return false;
+    } else if (role == "revival") {
+      Mp3PlayLargeFolder(1, 8);
+      return false;
+    }
+  }
+
   if (role == "player") {
     return true;
   } else if (role == "tagger") {
